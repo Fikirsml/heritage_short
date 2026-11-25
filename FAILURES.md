@@ -144,3 +144,12 @@ Append-only record of things that broke, misbehaved, or produced bad output — 
 ### Integrated MusicGen cache verification — 2026-11-26 EAT
 
 User confirmed first integrated smoke run succeeded with cache_hit=false, and second run succeeded with cache_hit=true. Second result: UTC 2026-11-25T22:35:11.152295+00:00, job smoke-music-1795646111, model facebook/musicgen-small, prompt soft piano note sequence, duration requested 5 s, seed 42, music.wav, status success, error null, latency 0.027 s, gpu_minutes 0.0 (rounded), cost_usd 0.0, peak_gpu_memory_gib null (not measured on cache hit). Earlier standalone generation took 9.863 s; illustrative comparison is about 365x faster, not a controlled same-job speedup because first integrated latency was not supplied and prompts differ. Integrated short generation, playback and cache reuse verified by user; full-length generation remains pending.
+
+### F017 — Wan checkpoint format incompatible with Diffusers
+
+- Date: 2026-11-26
+- Symptom: smoke failed with OSError; direct traceback showed HTTP 404 for vae/config.json in Wan-AI/Wan2.2-TI2V-5B.
+- Environment: Python 3.13.16, torch 2.14.1+cu130, diffusers 0.42.1, transformers 5.22.1, CUDA available, available RAM 10.76 GiB, free disk 112.48 GiB.
+- Cause: original checkpoint repository lacks the requested Diffusers component configuration.
+- Fix: use Wan-AI/Wan2.2-TI2V-5B-Diffusers; user verified downloads of vae/config.json and model_index.json. Preserve detailed per-shot exception messages.
+- Status: missing configuration blocker resolved; weight loading, pipeline compatibility, memory feasibility and inference pending.
