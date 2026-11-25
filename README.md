@@ -13,7 +13,7 @@ personal college journey and the role of faith in God through challenges.
 ```
 pipeline/          # stage modules + Colab-side GPU workers
   run.py           # orchestrator: python -m pipeline.run --stage <name>
-  storyboard.py    # Gemini: storyboard.json generation (reads story_brief.md)
+  storyboard.py    # Gemini: storyboard.json generation (reads inputs/story_brief.md)
   tts.py           # narration provider dispatch (TTS_PROVIDER env)
   kokoro_client.py # local Kokoro-82M TTS (offline, free)
   gemini_client.py # Gemini TTS narration (optional provider)
@@ -25,7 +25,7 @@ pipeline/          # stage modules + Colab-side GPU workers
   smoke_test.py    # live provider connectivity checks
 schema/            # storyboard.json JSON Schema
 storyboard.json    # single source of truth for all stages
-story_brief.md     # YOUR story details — input to the story stage (fill in TODOs)
+inputs/story_brief.md     # YOUR story details — input to the story stage (fill in TODOs)
 notebooks/         # Colab notebooks (GPU handoff — see COLAB.md)
 tests/             # pytest unit tests (no live calls)
 outputs/
@@ -66,13 +66,12 @@ offline, CPU; first run downloads ~330 MB of weights). Deps are pip-only:
 espeak-ng` also works — see FAILURES.md F009 for ffmpeg status).
 Set `TTS_PROVIDER=gemini` to use Gemini TTS instead.
 
-Input order: fill in `story_brief.md` (your real story details) →
+Input order: fill in `inputs/narration.txt` (approved spoken script), `inputs/story_brief.md` and `inputs/prompts/storyboard.md` →
 `--stage story --force` generates a real `storyboard.json` → hand-edit it if
-needed → the remaining stages consume it. Without `story_brief.md` the story
-stage uses a generic premise.
+needed → the remaining stages consume it. All three creative inputs must be nonempty. Narration is preserved verbatim (outer whitespace trimmed). See inputs/README.md.
 
 ```bash
-python -m pipeline.run --all       # story → keyframes → narration → package Colab jobs
+python -m pipeline.run --stage all       # story → keyframes → narration → package Colab jobs
 python -m pipeline.run --resume    # after Colab + Drive sync: collect → assemble
 python -m pipeline.run --stage story --force   # regenerate storyboard.json
 ```
