@@ -4,8 +4,7 @@ Copied into the Drive exchange folder (exchange/pipeline_gpu/) and imported
 by notebooks/video_wan22.ipynb. Heavy deps (torch, diffusers) are imported
 lazily so the module stays importable on the local Mac for testing.
 
-T4 constraints (14.56 GB, no bf16): fp16 transformer, fp32 VAE,
-enable_model_cpu_offload, VAE tiling, small frames/resolution per shot.
+T4: NF4 transformer/text encoder, FP16 compute, FP32 VAE, tiling.
 """
 
 import json
@@ -52,20 +51,24 @@ def _base_entry(job, model, parameters):
 def _load_pipe(model_id):
     """Load Wan2.2-TI2V-5B configured for a 14.5 GB T4."""
     import torch
-    from diffusers import AutoencoderKLWan, WanPipeline
+    from diffusers import AutoencoderKLWan, WanPipeline, PipelineQuantizationConfig
 
-    # VAE stays fp32 — fp16 VAE decoding produces black/corrupted frames.
+    quant = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4",
+                      "bnb_4bit_compute_dtype": torch.float16,
+                      "bnb_4bit_use_double_quant": True},
+        components_to_quantize=["transformer", "text_encoder"],
+    )
     vae = AutoencoderKLWan.from_pretrained(
         model_id, subfolder="vae", torch_dtype=torch.float32
     )
     pipe = WanPipeline.from_pretrained(
-        model_id, vae=vae, torch_dtype=torch.float16
+        model_id, vae=vae, quantization_config=quant,
+        torch_dtype=torch.float16, low_cpu_mem_usage=True
     )
-    # Streams transformer/text-encoder blocks GPU<->CPU as needed;
-    # without this the ~5B-param transformer alone approaches T4 limits.
-    pipe.enable_model_cpu_offload()
-    if hasattr(pipe.vae, "enable_tiling"):
-        pipe.vae.enable_tiling()
+    pipe.to("cuda")
+    pipe.vae.enable_tiling()
     return pipe
 
 
@@ -87,17 +90,19 @@ def _generate_one(pipe, shot, inputs_dir, out_dir, fps):
         "negative_prompt": shot.get("negative_prompt", DEFAULT_NEGATIVE),
         "height": int(video.get("height", 480)),
         "width": int(video.get("width", 480)),
-        "num_frames": int(video.get("frames", 49)),
-        "num_inference_steps": int(video.get("steps", 30)),
-        "guidance_scale": float(video.get("guidance", 5.0)),
+        "num_frames": int(video.get("frames", 17)),
+        "num_inference_steps": int(video.get("steps", 6)),
+        "guidance_scale": float(video.get("guidance", 3.0)),
         "generator": generator,
     }
     if image is not None:
-        # TI2V-5B accepts an optional first-frame conditioning image.
-        kwargs["image"] = image
+        from diffusers import WanImageToVideoPipeline
+        pipe = WanImageToVideoPipeline.from_pipe(pipe, expand_timesteps=True)
+        kwargs["image"] = image.resize((kwargs["width"], kwargs["height"]))
 
     out_path = Path(out_dir) / f"{shot['id']}.mp4"
-    result = pipe(**kwargs)
+    with torch.inference_mode():
+        result = pipe(**kwargs)
     export_to_video(result.frames[0], str(out_path), fps=fps)
     torch.cuda.empty_cache()
 
@@ -126,7 +131,7 @@ def _generate_impl(job, out_dir, inputs_dir):
     for shot in shots:
         try:
             keyframe = Path(inputs_dir) / f"{shot['id']}.png"
-            params = {"version": 1, "model": model_id, "fps": fps,
+            params = {"version": 2, "precision": "nf4", "model": model_id, "fps": fps,
                       "prompt": shot["prompt"], "negative": shot.get("negative_prompt", DEFAULT_NEGATIVE),
                       "video": shot.get("video", {}),
                       "keyframe": hashlib.sha256(keyframe.read_bytes()).hexdigest() if keyframe.is_file() else None}
@@ -211,7 +216,7 @@ def run_smoke(exchange_root):
                     "height": 480,
                     "frames": 17,
                     "steps": 6,
-                    "guidance": 5.0,
+                    "guidance": 3.0,
                     "seed": 1,
                 },
             }
