@@ -1,0 +1,9 @@
+# AI providers
+google-genai>=1.0.0      # Gemini SDK (story/script generation; images TBD)
+requests>=2.32.0         # Cloudflare REST APIs (Workers AI, R2)
+
+# Config
+python-dotenv>=1.0.0     # load .env
+
+# Testing
+pytest>=8.0.0
