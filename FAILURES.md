@@ -118,3 +118,19 @@ Append-only record of things that broke, misbehaved, or produced bad output — 
 
 - Local commit 9804cee: `python -m pytest -q` returned 35 passed in 2.46s.
 - Status: resolved for offline regression suite. Live GPU and full assembly verification remain pending.
+
+### F011–F016 — ACE-Step blocked music generation; migration to MusicGen
+
+- Date: 2026-11-26
+- Stage: Colab music smoke test.
+- F011: PyPI install of acestep returned no matching distribution.
+- F012: attempted installation rejected Python 3.13.16 (requires >=3.11,<3.13); switched to Colab 2026.01 / Python 3.12.12.
+- F013: dependency warnings involving fsspec/gcsfs and jedi.
+- F014: installed legacy ace_step 0.2.0 loaded ACE-Step/ACE-Step-v1-3.5B, not requested 1.5. Diffusion completed but decoding failed with GET was unable to find an engine to execute this computation.
+- F015: legacy constructor used dtype, while worker passed bf16 through kwargs; precision mismatch suspected, not proven as crash cause.
+- F016: repeated runtime restarts even during debugging; no confirmed OOM or definitive crash cause. No usable audio verified.
+- Decision: stop spending limited GPU sessions and deadline time on legacy integration; use facebook/musicgen-small through Transformers 4.57.6 and SciPy 1.16.3, in a clean Colab T4 runtime. Imports and inference passed without the previous installation/runtime blockers in this test.
+- Measured: FP16, seed 42, guidance 3, 256 tokens, 9.863 s generation, 5.06 s audio, 32 kHz, 647738 bytes, peak allocated GPU memory 1.215 GiB (about 8.3% of 14.56 GiB capacity; not total runtime memory), zero API cost. No comparable successful ACE-Step peak-memory measurement exists. No crash in successful MusicGen test.
+- Creative evaluation (user): audio 4/5, emotional alignment 3/5, prompt adherence 4/5, narration suitability 4/5; mean 3.75/5. No free-text observations supplied.
+- Tradeoffs: MusicGen weights CC BY-NC 4.0; noncommercial use only under weight license. Assignment names ACE-Step 1.5; substitution disclosed, acceptance not confirmed. Longer scores require segmented generation and crossfades; continuity not yet tested.
+- Status: short standalone generation blocker resolved via substitution; integrated worker, cache and full-length soundtrack verification pending. Legacy ACE-Step 1.5 itself was not successfully tested.
