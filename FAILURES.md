@@ -97,3 +97,11 @@ Append-only record of things that broke, misbehaved, or produced bad output — 
 - **Root cause**: ffmpeg was never installed; `brew install ffmpeg` was never run.
 - **Fix**: `brew install ffmpeg`. Until then the assemble/radio_cut stages can't run locally; narration (Kokoro) and all provider stages work without it.
 - **Status**: open — blocked on `brew install ffmpeg`
+
+#### F009 follow-up — 2026-11-25
+
+- **Observed failure**: Multiple Homebrew FFmpeg installation attempts did not complete on Intel macOS 12.6.1. No FFmpeg Cellar or opt directory, no running brew process, and no ffmpeg/ffprobe command. Dependency logs exist; cache 333 MB and available disk 13 GiB.
+- **Root cause**: Exact installation failure remains unknown; earlier entry is superseded by these observations.
+- **Alternative**: FFmpeg via pip-installed imageio-ffmpeg==0.8.1, rather than Homebrew.
+- **Verification**: Bundled FFmpeg 9.0.2-tessus returned exit code 0; a two-second H.264 black-screen MP4 was encoded and played successfully on the user's Mac.
+- **Status**: Installation blocker resolved via fallback. Pipeline regression tests pending; standalone ffprobe remains unavailable.
