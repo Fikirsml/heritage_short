@@ -14,6 +14,7 @@ GPU stages (music, video) run manually in Colab — see COLAB.md.
 """
 
 import argparse
+import copy
 import sys
 
 from pipeline import exchange, utils
@@ -67,7 +68,19 @@ def stage_narration(storyboard):
     return path
 
 
-def stage_package(storyboard):
+def quality_profile(quality):
+    return utils.load_json(utils.INPUT_DIR / 'config' / 'quality_profiles.json')[quality]
+
+
+def video_job(storyboard, quality):
+    profile = quality_profile(quality)
+    shots = copy.deepcopy(storyboard['shots'])
+    for shot in shots:
+        shot.setdefault('video', {}).update({k: profile[k] for k in ('width', 'height', 'steps', 'frames')})
+    return {'fps': 24, 'shots': shots, 'quality': quality}
+
+
+def stage_package(storyboard, quality='draft'):
     keyframes = [
         OUTPUT_DIR / "keyframes" / f"{shot['id']}.png"
         for shot in storyboard["shots"]
@@ -79,7 +92,7 @@ def stage_package(storyboard):
     )
     video_dir = exchange.package_job(
         "video",
-        {"fps": 24, "shots": storyboard["shots"]},
+        video_job(storyboard, quality),
         input_files=existing,
     )
 
@@ -90,10 +103,13 @@ def stage_package(storyboard):
     return music_dir, video_dir
 
 
-def stage_collect(storyboard=None):
+def stage_collect(storyboard=None, quality='draft'):
     copied = []
     copied += exchange.collect_results(OUTPUT_DIR / "music", stage="music")
-    copied += exchange.collect_results(OUTPUT_DIR / "shots", stage="video")
+    if storyboard is not None:
+        keyframes = [OUTPUT_DIR / "keyframes" / f"{s['id']}.png" for s in storyboard["shots"]]
+        job_dir = exchange.package_job("video", video_job(storyboard, quality), [p for p in keyframes if p.is_file()])
+        copied += exchange.collect_results(OUTPUT_DIR / "shots" / quality / job_dir.name, stage="video", job_id_filter=job_dir.name)
     if copied:
         for path in copied:
             print(f"[collect] {path}")
@@ -102,13 +118,20 @@ def stage_collect(storyboard=None):
     return copied
 
 
-def stage_assemble(storyboard):
+def stage_assemble(storyboard, quality='draft'):
     from pipeline import assemble
 
     radio = assemble.build_radio_cut()
     print(f"[assemble] radio cut -> {radio}")
 
-    final, fallbacks = assemble.assemble(storyboard)
+    profile = quality_profile(quality)
+    keyframes = [OUTPUT_DIR / "keyframes" / f"{s['id']}.png" for s in storyboard["shots"]]
+    job_dir = exchange.package_job("video", video_job(storyboard, quality), [p for p in keyframes if p.is_file()])
+    height = profile["export_height"]
+    dest = OUTPUT_DIR / "final" / quality
+    dest.mkdir(parents=True, exist_ok=True)
+    for label, size in (("horizontal", (round(height * 16 / 9 / 2) * 2, height)), ("vertical", (height, round(height * 16 / 9 / 2) * 2))):
+        final, fallbacks = assemble.assemble(storyboard, out_path=dest / f"{label}.mp4", size=size, shots_dir=OUTPUT_DIR / "shots" / quality / job_dir.name)
     print(f"[assemble] final video -> {final}")
     if fallbacks:
         print(f"[assemble] ffmpeg fallback used for: {', '.join(fallbacks)}")
@@ -148,6 +171,7 @@ def main(argv=None):
         "--resume", action="store_true",
         help="shortcut for collect + assemble after a Colab run",
     )
+    parser.add_argument("--quality", choices=["draft", "final", "ultra"], default="draft")
     args = parser.parse_args(argv)
 
     utils.setup_directories()
@@ -155,17 +179,17 @@ def main(argv=None):
     try:
         if args.resume or args.stage == "collect":
             storyboard = utils.load_storyboard()
-            stage_collect(storyboard)
+            stage_collect(storyboard, args.quality)
             if args.resume:
-                stage_assemble(storyboard)
+                stage_assemble(storyboard, args.quality)
             return 0
 
         if args.stage == "assemble":
-            stage_assemble(utils.load_storyboard())
+            stage_assemble(utils.load_storyboard(), args.quality)
             return 0
 
         if args.stage == "package":
-            stage_package(utils.load_storyboard())
+            stage_package(utils.load_storyboard(), args.quality)
             return 0
 
         storyboard = stage_story(force=args.force)
@@ -181,11 +205,11 @@ def main(argv=None):
         if args.stage == "narration":
             return 0
 
-        stage_package(storyboard)
+        stage_package(storyboard, args.quality)
 
-        if stage_collect(storyboard):
+        if stage_collect(storyboard, args.quality):
             print("[all] results already present - assembling now")
-            stage_assemble(storyboard)
+            stage_assemble(storyboard, args.quality)
         # else: handoff instructions were printed by stage_package
         return 0
     except Exception as error:  # noqa: BLE001 - CLI surface: report, don't trace
