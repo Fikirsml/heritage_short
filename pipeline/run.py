@@ -23,6 +23,10 @@ from pipeline.utils import OUTPUT_DIR, STORYBOARD_FILE
 def stage_story(force=False):
     if STORYBOARD_FILE.is_file() and not force:
         storyboard = utils.load_storyboard()
+        from pipeline.storyboard import load_creative_inputs
+        narration, _, _ = load_creative_inputs()
+        if storyboard["narration"]["script"] != narration:
+            raise ValueError("Narration changed; regenerate storyboard with --stage story --force")
         print(
             f"[story] reusing {STORYBOARD_FILE.name} "
             f"({len(storyboard['shots'])} shots). "
@@ -166,6 +170,9 @@ def main(argv=None):
 
         storyboard = stage_story(force=args.force)
         if args.stage == "story":
+            return 0
+        if args.stage == "narration":
+            stage_narration(storyboard)
             return 0
         stage_keyframes(storyboard)
         if args.stage == "keyframes":
