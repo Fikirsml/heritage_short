@@ -140,3 +140,7 @@ Append-only record of things that broke, misbehaved, or produced bad output — 
 - User-reported local regression run after commit 3b17c91: `python -m pytest -q` — 38 passed in 15.88s, no failures or skips.
 - Offline integration tests passed, including model migration, seed preservation and crossfade behavior.
 - Integrated Colab inference, cache reuse and full-length soundtrack remain pending.
+
+### Integrated MusicGen cache verification — 2026-11-26 EAT
+
+User confirmed first integrated smoke run succeeded with cache_hit=false, and second run succeeded with cache_hit=true. Second result: UTC 2026-11-25T22:35:11.152295+00:00, job smoke-music-1795646111, model facebook/musicgen-small, prompt soft piano note sequence, duration requested 5 s, seed 42, music.wav, status success, error null, latency 0.027 s, gpu_minutes 0.0 (rounded), cost_usd 0.0, peak_gpu_memory_gib null (not measured on cache hit). Earlier standalone generation took 9.863 s; illustrative comparison is about 365x faster, not a controlled same-job speedup because first integrated latency was not supplied and prompts differ. Integrated short generation, playback and cache reuse verified by user; full-length generation remains pending.
