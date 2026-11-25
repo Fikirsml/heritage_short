@@ -46,7 +46,18 @@ cp .env.example .env   # fill in real keys — .env is gitignored
 
 ## Running
 
-Requires `ffmpeg` (`brew install ffmpeg`) plus keys in `.env`.
+Requires keys in `.env`. Assembly prefers system FFmpeg if available, otherwise
+uses the executable supplied by `imageio-ffmpeg==0.8.1` (installed from
+requirements.txt). Homebrew is optional. See FAILURES.md F009 and EXPERIMENTS.md E001.
+
+Verify the resolved executable:
+
+```bash
+python -c 'from pipeline.assemble import _require_ffmpeg; print(_require_ffmpeg())'
+python -c 'from pipeline.assemble import _run; print(_run(["ffmpeg", "-version"]).stdout.splitlines()[0])'
+```
+
+The bundled executable does not provide a standalone ffprobe command.
 
 Narration defaults to **local Kokoro-82M** (`TTS_PROVIDER=kokoro` — free,
 offline, CPU; first run downloads ~330 MB of weights). Deps are pip-only:
