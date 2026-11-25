@@ -1,99 +1,66 @@
-"""Story stage: generate storyboard.json via Gemini, validate it, save it.
-
-The generated file is meant to be hand-edited afterwards — every
-downstream stage re-validates it against schema/storyboard.schema.json.
-"""
-
+"""Generate a validated storyboard from approved creative inputs."""
 import json
 import os
-import re
 import time
 
 from google import genai
 from google.genai import types
-
+from jsonschema import validate
 from pipeline.utils import (
-    SCHEMA_FILE,
-    STORYBOARD_FILE,
-    get_env,
-    load_json,
-    log_run,
-    save_json,
+    INPUT_DIR, SCHEMA_FILE, STORYBOARD_FILE, get_env, load_json, log_run, save_json
 )
 
-DEFAULT_TEXT_MODEL = "gemini-2.5-flash"
+DEFAULT_TEXT_MODEL = "gemini-3.5-flash"
 
-PROMPT_TEMPLATE = """Write a storyboard for a {duration}-second AI-generated short film.
+def load_creative_inputs():
+    paths = [INPUT_DIR / "narration.txt", INPUT_DIR / "story_brief.md",
+             INPUT_DIR / "prompts" / "storyboard.md"]
+    values = [path.read_text(encoding="utf-8").strip() for path in paths]
+    if not all(values):
+        raise ValueError("Fill in narration.txt, story_brief.md and prompts/storyboard.md in inputs/")
+    return tuple(values)
 
-Story: the author's real college journey — arriving hopeful, hitting academic
-and personal challenges, and getting through them with faith in God.
-Audience: family and friends. Narration is first-person, plain spoken English,
-about 150-220 words so it reads in roughly {duration} seconds. Warm, honest,
-hopeful tone — no melodrama.
-
-Reply with ONLY a JSON object in exactly this shape:
-{{
-  "title": "short film title",
-  "target_duration_seconds": {duration},
-  "narration": {{"script": "full first-person narration text"}},
-  "music": {{"prompt": "instrumental music description matching the mood", "duration_seconds": {duration}}},
-  "shots": [
-    {{"id": "shot_01", "prompt": "visual description for image/video generation", "duration_seconds": 12}},
-    ...
-  ]
-}}
-
-Rules:
-- exactly {shot_count} shots, ids shot_01..shot_{shot_count:02d}
-- shot durations must sum to about {duration} seconds
-- each shot prompt is a single concrete visual scene (no text overlays, no real people's faces)
-- progression: hopeful arrival -> struggle -> turning point with faith -> resolution/gratitude
-"""
-
-
-def _LAarat eload_json(SCHEMA_FILE)
-
-        # Fill defaults the generator may omit, then validate the result.
-        storyboard.setdefault(
-            "target_duration_seconds", duration_seconds
+def generate_storyboard(duration_seconds=75, shot_count=10):
+    narration, brief, instructions = load_creative_inputs()
+    schema = load_json(SCHEMA_FILE)
+    model = os.getenv("GEMINI_MODEL", DEFAULT_TEXT_MODEL)
+    prompt = (
+        f"{instructions}\nTarget duration: {duration_seconds} seconds. "
+        f"Exactly {shot_count} shots. Shot durations must sum to target.\n"
+        f"Brief:\n{brief}\nApproved narration:\n{narration}\n"
+        f"Return only JSON matching this schema:\n{json.dumps(schema)}"
+    )
+    start = time.perf_counter()
+    params = {"duration": duration_seconds, "shots": shot_count, "brief": "inputs/story_brief.md"}
+    try:
+        client = genai.Client(api_key=get_env("GEMINI_API_KEY"))
+        response = client.models.generate_content(
+            model=model, contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
-        storyboard.setdefault("music", {})
-        storyboard["music"].setdefault("model", "ace-step-1.5")
+        storyboard = json.loads(response.text)
+        storyboard["target_duration_seconds"] = duration_seconds
+        storyboard.setdefault("narration", {})["script"] = narration
         storyboard["narration"].setdefault("voice", "Kore")
-        default_video = {
-            "model": "Wan-AI/Wan2.2-TI2V-5B",
-            "width": 480,
-            "height": 480,
-            "frames": 49,
-            "steps": 30,
-            "guidance": 5.0,
-        }
+        storyboard["music"].setdefault("model", "ace-step-1.5")
+        storyboard["music"]["duration_seconds"] = duration_seconds
         for index, shot in enumerate(storyboard["shots"]):
-            shot.setdefault("id", f"shot_{index + 1:02d}")
-            video = {**default_video, **shot.get("video", {})}
+            shot.setdefault("id", f"shot_{index+1:02d}")
+            video = {"model": "Wan-AI/Wan2.2-TI2V-5B", "width": 480,
+                     "height": 480, "frames": 49, "steps": 30, "guidance": 5.0,
+                     **shot.get("video", {})}
             video.setdefault("seed", 1000 + index)
             shot["video"] = video
-
-        from jsonschema import validate
         validate(instance=storyboard, schema=schema)
+        shots = storyboard["shots"]
+        if len(shots) != shot_count or len({s["id"] for s in shots}) != shot_count:
+            raise ValueError("Unexpected shot count or duplicate shot IDs")
+        if abs(sum(s["duration_seconds"] for s in shots) - duration_seconds) > 0.5:
+            raise ValueError("Shot durations do not match target duration")
         save_json(storyboard, STORYBOARD_FILE)
     except Exception as error:
-        log_run(
-            stage="story",
-            model=model,
-            parameters={"duration": duration_seconds, "shots": shot_count,
-                        "brief": brief_source or "default"},
-            latency=time.perf_counter() - start,
-            status="failed",
-            error=type(error).__name__,
-        )
+        log_run(stage="story", model=model, parameters=params,
+                latency=time.perf_counter()-start, status="failed", error=type(error).__name__)
         raise
-
-    log_run(
-        stage="story",
-        model=model,
-        parameters={"duration": duration_seconds, "shots": shot_count,
-                    "brief": brief_source or "default"},
-        latency=time.perf_counter() - start,
-    )
+    log_run(stage="story", model=model, parameters=params, latency=time.perf_counter()-start)
     return storyboard
