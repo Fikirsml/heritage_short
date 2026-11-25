@@ -15,7 +15,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-DEFAULT_MODEL = "Wan-AI/Wan2.2-TI2V-5B"
+DEFAULT_MODEL = "Wan-AI/Wan2.2-TI2V-5B-Diffusers"
 DEFAULT_NEGATIVE = (
     "low quality, distorted, warped, text, watermark, "
     "flicker, blurry, oversaturated"
@@ -115,6 +115,8 @@ def _generate_impl(job, out_dir, inputs_dir):
     model_id = (
         shots[0].get("video", {}).get("model") or DEFAULT_MODEL
     )
+    if model_id == "Wan-AI/Wan2.2-TI2V-5B":
+        model_id = DEFAULT_MODEL
     fps = int(job.get("fps", DEFAULT_FPS))
     pipe = None
     cache_dir = Path(out_dir).parent.parent / 'cache' / 'video'
@@ -144,7 +146,7 @@ def _generate_impl(job, out_dir, inputs_dir):
                 print(f"[video] {name}: cache miss")
             files.append(name)
         except Exception as error:  # noqa: BLE001 - record per-shot, continue
-            failures.append(f"{shot.get('id')}: {type(error).__name__}")
+            failures.append(f"{shot.get('id')}: {type(error).__name__}: {error}"[:500])
 
     if not files:
         raise RuntimeError(
@@ -170,6 +172,8 @@ def run_job(job_path, exchange_root):
         job.get("shots", [{}])[0].get("video", {}).get("model")
         or DEFAULT_MODEL
     )
+    if model == "Wan-AI/Wan2.2-TI2V-5B":
+        model = DEFAULT_MODEL
     entry = _base_entry(job, model, {"shots": len(job.get("shots", []))})
     start = time.perf_counter()
 
