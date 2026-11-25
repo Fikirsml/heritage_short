@@ -17,11 +17,19 @@ SIZE = (480, 480)
 
 
 def _require_ffmpeg():
-    if not shutil.which("ffmpeg"):
-        raise RuntimeError("ffmpeg not found - install with: brew install ffmpeg")
+    executable = shutil.which("ffmpeg")
+    if executable:
+        return executable
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except (ImportError, RuntimeError, OSError) as exc:
+        raise RuntimeError("FFmpeg unavailable; install imageio-ffmpeg from requirements.txt") from exc
 
 
 def _run(cmd):
+    if cmd[0] == "ffmpeg":
+        cmd = [_require_ffmpeg(), *cmd[1:]]
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0:
         raise RuntimeError(
