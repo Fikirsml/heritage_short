@@ -43,7 +43,7 @@ heritage-exchange/            # DRIVE_EXCHANGE_DIR points here
 2. **Drive** — if `DRIVE_EXCHANGE_DIR` is unset, upload `./exchange/` to
    `My Drive/heritage-exchange` now. If set, wait for Drive to sync.
 
-3. **Colab — music**: open `notebooks/music_ace_step.ipynb`, set runtime to
+3. **Colab — music**: open `notebooks/musicgen.ipynb`, set runtime to
    **T4 GPU**, Runtime > Run all. Cell 5 is a ~5 s smoke test — if it fails,
    fix before continuing (record it in FAILURES.md). Cell 6 runs the real job.
 
@@ -90,3 +90,7 @@ heritage-exchange/            # DRIVE_EXCHANGE_DIR points here
   nothing; record exact versions in EXPERIMENTS.md after a successful run.
 - Given the same `storyboard.json` (seeds included), outputs are
   deterministic up to GPU nondeterminism.
+
+## MusicGen migration (2026-11-26)
+
+Default music worker: `facebook/musicgen-small`, FP16 on Colab T4. See [FAILURES.md](FAILURES.md) F011–F016 for measured results and provider decision. The new notebook pins Transformers 4.57.6 and SciPy 1.16.3; run smoke first, then explicitly select the packaged job ID. Worker generates up to 25-second segments, blends with one-second crossfades, trims to target length and caches by generation settings. Model weights are CC BY-NC 4.0; assignment substitution acceptance and full-length integration are pending. Measured standalone generation: 9.863 s for 5.06 s audio, 1.215 GiB peak allocated GPU memory, $0 API cost; not a full-track benchmark.
