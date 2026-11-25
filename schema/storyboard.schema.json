@@ -51,7 +51,7 @@
         },
         "model": {
           "type": "string",
-          "default": "ace-step-1.5",
+          "default": "facebook/musicgen-small",
           "description": "Music model id used by the Colab GPU job."
         },
         "seed": {
