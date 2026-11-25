@@ -2,22 +2,25 @@
   "draft": {
     "width": 480,
     "height": 480,
-    "steps": 15,
+    "steps": 6,
     "frames": 17,
-    "export_height": 480
+    "export_height": 480,
+    "guidance": 3
   },
   "final": {
-    "width": 720,
-    "height": 720,
-    "steps": 30,
-    "frames": 49,
-    "export_height": 720
+    "width": 480,
+    "height": 480,
+    "steps": 20,
+    "frames": 17,
+    "export_height": 720,
+    "guidance": 3
   },
   "ultra": {
-    "width": 720,
-    "height": 720,
-    "steps": 30,
-    "frames": 49,
-    "export_height": 1080
+    "width": 480,
+    "height": 480,
+    "steps": 20,
+    "frames": 17,
+    "export_height": 1080,
+    "guidance": 3
   }
 }
