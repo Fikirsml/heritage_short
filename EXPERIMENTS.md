@@ -37,3 +37,7 @@ User-reported successful standalone text-to-video on Tesla T4 using Wan-AI/Wan2.
 ### Wan image conditioning follow-up
 
 User reports successful standalone image-to-video generation using WanImageToVideoPipeline.from_pipe(pipe, expand_timesteps=True), sharing the quantized components, 480x480, 17 frames, six steps, guidance 3, seed 42. F018 standalone compatibility resolved. Integrated worker and cache remain unverified; no I2V latency or memory measurement supplied. Final/ultra 20 steps are proposed production settings, not benchmarked.
+
+### Technical foundation verification (2026-11-26)
+
+User confirms Windsurf IDE with SWE free-agent and local `python -m pytest -q`: 38 passed in 12.64s following Wan integration commit 00eb130. Offline regression suite passed; integrated GPU production and video cache verification remain pending. Coding agent setup is user-reported.
