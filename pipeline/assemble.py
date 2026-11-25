@@ -55,7 +55,7 @@ def build_fallback_clip(keyframe, out_path, duration, size=SIZE, fps=FPS):
         f"scale={width * 4}:{height * 4}:force_original_aspect_ratio=increase,crop={width * 4}:{height * 4},"
         "zoompan=z='min(1.0+0.0008*on,1.2)':"
         "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
-        f"d={frames}:s={width}x{height}:fps={fps},format=yuv420p"
+        f"d={frames}:s={width}x{height}:fps={fps},setsar=1,format=yuv420p"
     )
     _run([
         "ffmpeg", "-y", "-loop", "1", "-i", str(keyframe),
@@ -74,8 +74,8 @@ def normalize_clip(src, dest, duration, size=SIZE, fps=FPS):
     _require_ffmpeg()
     width, height = size
     vf = (
-        f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
-        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={fps},"
+        f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+        f"crop={width}:{height},setsar=1,fps={fps},"
         "tpad=stop=-1:stop_mode=clone,format=yuv420p"
     )
     _run([
@@ -90,9 +90,9 @@ def normalize_clip(src, dest, duration, size=SIZE, fps=FPS):
 def assemble(storyboard, out_path=None, size=SIZE, fps=FPS, shots_dir=None):
     """Build the final mp4. Returns (final_path, fallback_shot_ids)."""
     _require_ffmpeg()
-    work = OUTPUT_DIR / "final" / "_work"
-    work.mkdir(parents=True, exist_ok=True)
     final = Path(out_path) if out_path else OUTPUT_DIR / "final" / "heritage_short.mp4"
+    work = final.parent / "_work" / final.stem
+    work.mkdir(parents=True, exist_ok=True)
 
     clips, fallbacks = [], []
     for shot in storyboard["shots"]:
