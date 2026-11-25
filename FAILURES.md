@@ -153,3 +153,11 @@ User confirmed first integrated smoke run succeeded with cache_hit=false, and se
 - Cause: original checkpoint repository lacks the requested Diffusers component configuration.
 - Fix: use Wan-AI/Wan2.2-TI2V-5B-Diffusers; user verified downloads of vae/config.json and model_index.json. Preserve detailed per-shot exception messages.
 - Status: missing configuration blocker resolved; weight loading, pipeline compatibility, memory feasibility and inference pending.
+
+### F018–F021 — Wan compatibility and loading experiments
+
+- F018 (open): WanPipeline call signature has no image argument; WanImageToVideoPipeline exists but checkpoint compatibility remains untested.
+- F019 (partially resolved): NF4 transformer and text encoder, FP16 compute, FP32 VAE, CUDA and VAE tiling enabled successful 480x480 text-to-video on T4. Peak allocated 13.92 GiB of previously measured 14.56 GiB. Higher resolution and longer clips unverified.
+- F020 (resolved): bitsandbytes 0.50.2 installed and standalone NF4 passed, but Diffusers availability false until session restart; after restart availability true and minimum version check passed.
+- F021 (workaround verified): offline snapshot completeness check reported nine missing files including documentation/assets. Normal online from_pretrained loading succeeded; no claim that full snapshot is complete.
+- User-reported smoke success: 17 frames, 24 fps, six steps, seed 42, loading 148.4 seconds. Video saved to Drive experiment folder. Generation latency not captured in supplied metrics. Worker integration and image conditioning pending.
