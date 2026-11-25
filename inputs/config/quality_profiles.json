@@ -1,0 +1,23 @@
+{
+  "draft": {
+    "width": 480,
+    "height": 480,
+    "steps": 15,
+    "frames": 17,
+    "export_height": 480
+  },
+  "final": {
+    "width": 720,
+    "height": 720,
+    "steps": 30,
+    "frames": 49,
+    "export_height": 720
+  },
+  "ultra": {
+    "width": 720,
+    "height": 720,
+    "steps": 30,
+    "frames": 49,
+    "export_height": 1080
+  }
+}
