@@ -6,18 +6,29 @@ personal college journey and the role of faith in God through challenges.
 - **Challenge**: 10 Academy — Week 0, AI Content Generation
 - **Narration language**: English
 - **Audience**: family and friends
-- **Status**: Phase 1 — foundation and smoke tests implemented; live verification pending.
+- **Status**: Phase 2 — semi-automated pipeline implemented. Local stages work via APIs; GPU stages (music, video) run manually on Colab (see COLAB.md). Live end-to-end run pending.
 
 ## Repository layout
 
 ```
-pipeline/          # pipeline stage modules (planned)
-schema/            # data contracts: Story, Shot, AssetRef, RunRecord (planned)
-tests/             # pytest unit tests
+pipeline/          # stage modules + Colab-side GPU workers
+  run.py           # orchestrator: python -m pipeline.run --stage <name>
+  storyboard.py    # Gemini: storyboard.json generation
+  gemini_client.py # Gemini TTS narration
+  cloudflare_client.py # Workers AI keyframe images
+  exchange.py      # Drive job packaging + result collection
+  gpu_music.py     # ACE-Step 1.5 worker (runs on Colab)
+  gpu_video.py     # Wan 2.2 TI2V-5B worker (runs on Colab)
+  assemble.py      # ffmpeg concat/mix + keyframe fallback
+  smoke_test.py    # live provider connectivity checks
+schema/            # storyboard.json JSON Schema
+storyboard.json    # single source of truth for all stages
+notebooks/         # Colab notebooks (GPU handoff — see COLAB.md)
+tests/             # pytest unit tests (no live calls)
 outputs/
-  narration/       # generated narration audio + scripts (gitignored)
-  radio_cut/       # generated audio-first cut (gitignored)
+  keyframes/ shots/ music/ narration/ radio_cut/ final/  # generated (gitignored)
   kept/            # hand-picked artifacts retained for assessment (tracked)
+exchange/          # local fallback for the Drive exchange dir (gitignored)
 runs.jsonl         # append-only log, one JSON object per model call
 ```
 
@@ -32,17 +43,28 @@ cp .env.example .env   # fill in real keys — .env is gitignored
 
 ## Running
 
-Configure model names in .env and Kaggle credentials locally.
+Requires `ffmpeg` (`brew install ffmpeg`) plus keys in `.env`.
 
 ```bash
-python -m pipeline.smoke_test
-python -m pipeline.smoke_test --provider gemini-tts
-python -m pytest -v
-ffmpeg -version
-ffprobe -version
+python -m pipeline.run --all       # story → keyframes → narration → package Colab jobs
+python -m pipeline.run --resume    # after Colab + Drive sync: collect → assemble
+python -m pipeline.run --stage story --force   # regenerate storyboard.json
 ```
 
-Smoke tests make real requests and may incur charges. Unknown costs are logged as null; reconcile actual charges in COSTS.md. Successful TTS writes outputs/narration/test.wav. Listen to it to verify quality. Kaggle connectivity does not verify GPU availability. Model defaults may need updating for your account. Keep non-sensitive assessment artifacts in outputs/kept/. Live tests have not been verified.
+GPU stages are a **manual handoff** — upload the exchange folder to Drive and
+run the two notebooks in Colab (full procedure: **COLAB.md**). The final film
+lands in `outputs/final/heritage_short.mp4`; audio-only preview in
+`outputs/radio_cut/`.
+
+```bash
+python -m pytest -v                # unit tests (offline)
+python -m pipeline.smoke_test      # live provider checks (may incur charges)
+```
+
+**Reproducibility limitation**: the two Colab notebook runs are manual —
+everything else is one command. Given the same `storyboard.json` seeds, output
+is deterministic up to GPU nondeterminism. Failed video shots fall back to
+ffmpeg zoompan clips so the film always assembles.
 
 ## Documentation
 

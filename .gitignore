@@ -12,3 +12,6 @@ kaggle.json
 outputs/*/*
 !outputs/*/.gitkeep
 !outputs/kept/**
+
+# Local Colab exchange fallback (used when DRIVE_EXCHANGE_DIR is unset)
+exchange/

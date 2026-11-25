@@ -2,9 +2,6 @@
 import time
 import argparse
 import os
-import wave
-import re
-from google.genai import types
 import requests
 
 from google import genai
@@ -12,7 +9,8 @@ from google import genai
 from pipeline.utils import (
     get_env,
     log_run,
-    setup_directories
+    setup_directories,
+    write_pcm_wav,  # re-exported for tests/test_smoke.py
 )
 
 
@@ -155,44 +153,15 @@ def test_kaggle():
     )
 
 
-def write_pcm_wav(path, data, sample_rate=24000):
-    if not data or len(data) % 2 or sample_rate <= 0:
-        raise ValueError("Invalid PCM audio")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(".tmp")
-    with wave.open(str(temporary), "wb") as output:
-        output.setnchannels(1)
-        output.setsampwidth(2)
-        output.setframerate(sample_rate)
-        output.writeframes(data)
-    temporary.replace(path)
-
-
 def test_gemini_tts(model, voice):
     from pipeline.utils import OUTPUT_DIR
+    from pipeline.gemini_client import synthesize_speech
     path = OUTPUT_DIR / "narration" / "test.wav"
     path.unlink(missing_ok=True)
-    client = genai.Client(api_key=get_env("GEMINI_API_KEY"))
-    response = client.models.generate_content(
-        model=model,
-        contents="Say clearly: This is a narration test.",
-        config=types.GenerateContentConfig(
-            response_modalities=["AUDIO"],
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)
-                )
-            )
-        )
+    pcm, rate = synthesize_speech(
+        "Say clearly: This is a narration test.", model, voice
     )
-    for candidate in response.candidates or []:
-        for part in (candidate.content.parts or []) if candidate.content else []:
-            inline = part.inline_data
-            if inline and inline.data and (inline.mime_type or "").lower().startswith("audio/l16"):
-                match = re.search(r"rate=(\d+)", inline.mime_type)
-                write_pcm_wav(path, inline.data, int(match.group(1)) if match else 24000)
-                return
-    raise RuntimeError("No supported PCM audio returned")
+    write_pcm_wav(path, pcm, rate)
 
 
 def main():

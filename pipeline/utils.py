@@ -2,6 +2,7 @@
 import os
 import json
 import time
+import wave
 import hashlib
 from pathlib import Path
 from datetime import datetime, timezone
@@ -75,6 +76,25 @@ def load_storyboard():
     validate(instance=storyboard, schema=schema)
 
     return storyboard
+
+
+# -------------------------------
+# Audio
+# -------------------------------
+
+def write_pcm_wav(path, data, sample_rate=24000):
+    """Write 16-bit mono PCM bytes to a .wav file atomically."""
+    if not data or len(data) % 2 or sample_rate <= 0:
+        raise ValueError("Invalid PCM audio")
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    with wave.open(str(temporary), "wb") as output:
+        output.setnchannels(1)
+        output.setsampwidth(2)
+        output.setframerate(sample_rate)
+        output.writeframes(data)
+    temporary.replace(path)
 
 
 # -------------------------------
