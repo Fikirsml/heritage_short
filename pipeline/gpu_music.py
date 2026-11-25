@@ -1,4 +1,4 @@
-"""Colab-side music generation with ACE-Step 1.5.
+"""Colab-side MusicGen generation; legacy ACE-Step retained for experiments.
 
 This module is copied into the Drive exchange folder (exchange/pipeline_gpu/)
 and imported by notebooks/music_ace_step.ipynb. Heavy dependencies (torch,
@@ -68,7 +68,7 @@ def _init_pipeline():
         return ACEStepPipeline(kwargs["checkpoint_dir"])
 
 
-def _generate_impl(job, out_dir):
+def _generate_legacy(job, out_dir):
     """Generate the music track. Returns list of produced filenames."""
     import torch
 
@@ -98,6 +98,79 @@ def _generate_impl(job, out_dir):
     return [out_path.name]
 
 
+
+MODEL_ID = "facebook/musicgen-small"
+_CACHE_VERSION = 1
+
+def blend_segments(segments, overlap):
+    import numpy as np
+    result = segments[0]
+    for segment in segments[1:]:
+        n = min(overlap, len(result), len(segment))
+        if n:
+            fade = np.linspace(0, 1, n, dtype=np.float32)
+            result = np.concatenate((result[:-n], result[-n:] * (1-fade) + segment[:n] * fade, segment[n:]))
+        else:
+            result = np.concatenate((result, segment))
+    return result
+
+def _generate_impl(job, out_dir):
+    import hashlib
+    import shutil
+    import math
+    import numpy as np
+    import torch
+    from scipy.io import wavfile
+    from transformers import AutoProcessor, MusicgenForConditionalGeneration
+    music = job["music"]
+    duration = float(music["duration_seconds"])
+    if not math.isfinite(duration) or not 0 < duration <= 180:
+        raise ValueError("Music duration must be between 0 and 180 seconds")
+    settings = dict(model=MODEL_ID, prompt=music["prompt"], duration=duration,
+                    seed=int(music.get("seed", 42)), segment_seconds=25,
+                    overlap_seconds=1, guidance=3.0, precision="float16",
+                    version=_CACHE_VERSION)
+    key = hashlib.sha256(json.dumps(settings, sort_keys=True).encode()).hexdigest()
+    out = Path(out_dir) / "music.wav"
+    cache = Path(out_dir).parent.parent / "cache" / "music" / (key + ".wav")
+    if cache.is_file() and cache.stat().st_size > 44:
+        shutil.copy2(cache, out)
+        job["_cache_hit"] = True
+        return [out.name]
+    if not torch.cuda.is_available():
+        raise RuntimeError("MusicGen worker requires CUDA")
+    processor = AutoProcessor.from_pretrained(MODEL_ID)
+    model = MusicgenForConditionalGeneration.from_pretrained(
+        MODEL_ID, torch_dtype=torch.float16).to("cuda").eval()
+    rate = model.config.audio_encoder.sampling_rate
+    inputs = processor(text=[settings["prompt"]], padding=True, return_tensors="pt").to("cuda")
+    segments = []
+    total = 0
+    target = round(duration * rate)
+    overlap = rate
+    torch.cuda.reset_peak_memory_stats()
+    while total < target:
+        seconds = min(25, (target-total+(overlap if segments else 0))/rate + 0.2)
+        torch.manual_seed(settings["seed"] + len(segments))
+        with torch.inference_mode():
+            values = model.generate(**inputs, do_sample=True, guidance_scale=3.0,
+                                    max_new_tokens=max(16, math.ceil(seconds*50)+4))
+        audio = values[0, 0].float().cpu().numpy()
+        if len(audio) <= (overlap if segments else 0):
+            raise RuntimeError("Generated segment too short")
+        total += len(audio) - (overlap if segments else 0)
+        segments.append(audio)
+    audio = blend_segments(segments, overlap)[:target]
+    wavfile.write(str(out), rate, np.clip(audio, -1, 1).astype(np.float32))
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    tmp = cache.with_suffix(".tmp")
+    shutil.copy2(out, tmp)
+    tmp.replace(cache)
+    job["_peak_gpu_memory_gib"] = round(torch.cuda.max_memory_allocated()/1024**3, 3)
+    job["_cache_hit"] = False
+    return [out.name]
+
+
 # -------------------------------
 # Job entry points (notebook API)
 # -------------------------------
@@ -110,7 +183,7 @@ def run_job(job_path, exchange_root):
     out_dir = results_root / job["job_id"]
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    model = job.get("music", {}).get("model", "ace-step-1.5")
+    model = MODEL_ID
     entry = _base_entry(job, model, job.get("music", {}))
     start = time.perf_counter()
 
@@ -125,21 +198,24 @@ def run_job(job_path, exchange_root):
     latency = time.perf_counter() - start
     entry["latency_seconds"] = round(latency, 3)
     entry["gpu_minutes"] = round(latency / 60, 3)
-    entry["cost_usd"] = None
+    entry["cost_usd"] = 0.0
+    entry["cache_hit"] = job.get("_cache_hit", False)
+    entry["peak_gpu_memory_gib"] = job.get("_peak_gpu_memory_gib")
 
     _write_result(results_root, entry)
     return entry
 
 
 def run_smoke(exchange_root):
-    """Tiny generation to verify ACE-Step + CUDA work on this runtime."""
+    """Tiny generation to verify MusicGen + CUDA work on this runtime."""
     smoke_job = {
         "job_id": f"smoke-music-{int(time.time())}",
         "stage": "music",
         "music": {
             "prompt": "soft piano note sequence",
             "duration_seconds": 5,
-            "steps": 10,
+            "model": MODEL_ID,
+            "seed": 42,
         },
     }
     results_root = Path(exchange_root) / "results"
