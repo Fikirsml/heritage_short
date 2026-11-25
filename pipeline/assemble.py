@@ -52,7 +52,7 @@ def build_fallback_clip(keyframe, out_path, duration, size=SIZE, fps=FPS):
     width, height = size
     frames = max(1, round(duration * fps))
     vf = (
-        f"scale={width * 4}:{height * 4},"
+        f"scale={width * 4}:{height * 4}:force_original_aspect_ratio=increase,crop={width * 4}:{height * 4},"
         "zoompan=z='min(1.0+0.0008*on,1.2)':"
         "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
         f"d={frames}:s={width}x{height}:fps={fps},format=yuv420p"
@@ -87,7 +87,7 @@ def normalize_clip(src, dest, duration, size=SIZE, fps=FPS):
     return Path(dest)
 
 
-def assemble(storyboard, out_path=None, size=SIZE, fps=FPS):
+def assemble(storyboard, out_path=None, size=SIZE, fps=FPS, shots_dir=None):
     """Build the final mp4. Returns (final_path, fallback_shot_ids)."""
     _require_ffmpeg()
     work = OUTPUT_DIR / "final" / "_work"
@@ -99,7 +99,7 @@ def assemble(storyboard, out_path=None, size=SIZE, fps=FPS):
         shot_id = shot["id"]
         duration = float(shot["duration_seconds"])
         dest = work / f"{shot_id}.mp4"
-        generated = OUTPUT_DIR / "shots" / f"{shot_id}.mp4"
+        generated = (Path(shots_dir) if shots_dir is not None else OUTPUT_DIR / "shots") / f"{shot_id}.mp4"
 
         if generated.is_file() and generated.stat().st_size > 0:
             normalize_clip(generated, dest, duration, size, fps)
