@@ -118,23 +118,32 @@ def stage_collect(storyboard=None, quality='draft'):
     return copied
 
 
+def export_sizes(quality):
+    """Exact 16:9 and 9:16, with even dimensions for H.264."""
+    short = quality_profile(quality)["export_height"]
+    if short == 480:
+        short = 486  # nearest even multiple of 9
+    if short % 18:
+        raise ValueError("Export short edge must be a multiple of 18")
+    long = short * 16 // 9
+    return {"horizontal": (long, short), "vertical": (short, long)}
+
+
 def stage_assemble(storyboard, quality='draft'):
     from pipeline import assemble
 
     radio = assemble.build_radio_cut()
     print(f"[assemble] radio cut -> {radio}")
 
-    profile = quality_profile(quality)
     keyframes = [OUTPUT_DIR / "keyframes" / f"{s['id']}.png" for s in storyboard["shots"]]
     job_dir = exchange.package_job("video", video_job(storyboard, quality), [p for p in keyframes if p.is_file()])
-    height = profile["export_height"]
     dest = OUTPUT_DIR / "final" / quality
     dest.mkdir(parents=True, exist_ok=True)
-    for label, size in (("horizontal", (round(height * 16 / 9 / 2) * 2, height)), ("vertical", (height, round(height * 16 / 9 / 2) * 2))):
+    for label, size in export_sizes(quality).items():
         final, fallbacks = assemble.assemble(storyboard, out_path=dest / f"{label}.mp4", size=size, shots_dir=OUTPUT_DIR / "shots" / quality / job_dir.name)
-    print(f"[assemble] final video -> {final}")
-    if fallbacks:
-        print(f"[assemble] ffmpeg fallback used for: {', '.join(fallbacks)}")
+        print(f"[assemble] {label} {size[0]}x{size[1]} -> {final}")
+        if fallbacks:
+            print(f"[assemble] ffmpeg fallback used for: {', '.join(fallbacks)}")
     return final
 
 
