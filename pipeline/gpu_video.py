@@ -9,6 +9,8 @@ enable_model_cpu_offload, VAE tiling, small frames/resolution per shot.
 """
 
 import json
+import hashlib
+import shutil
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -114,12 +116,33 @@ def _generate_impl(job, out_dir, inputs_dir):
         shots[0].get("video", {}).get("model") or DEFAULT_MODEL
     )
     fps = int(job.get("fps", DEFAULT_FPS))
-    pipe = _load_pipe(model_id)
+    pipe = None
+    cache_dir = Path(out_dir).parent.parent / 'cache' / 'video'
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
     files, failures = [], []
     for shot in shots:
         try:
-            files.append(_generate_one(pipe, shot, inputs_dir, out_dir, fps))
+            keyframe = Path(inputs_dir) / f"{shot['id']}.png"
+            params = {"version": 1, "model": model_id, "fps": fps,
+                      "prompt": shot["prompt"], "negative": shot.get("negative_prompt", DEFAULT_NEGATIVE),
+                      "video": shot.get("video", {}),
+                      "keyframe": hashlib.sha256(keyframe.read_bytes()).hexdigest() if keyframe.is_file() else None}
+            key = hashlib.sha256(json.dumps(params, sort_keys=True).encode()).hexdigest()
+            cached = cache_dir / f"{key}.mp4"
+            name = f"{shot['id']}.mp4"
+            if cached.is_file() and cached.stat().st_size:
+                shutil.copy2(cached, Path(out_dir) / name)
+                print(f"[video] {name}: cache hit")
+            else:
+                if pipe is None:
+                    pipe = _load_pipe(model_id)
+                _generate_one(pipe, shot, inputs_dir, out_dir, fps)
+                temporary = cached.with_suffix(".tmp")
+                shutil.copy2(Path(out_dir) / name, temporary)
+                temporary.replace(cached)
+                print(f"[video] {name}: cache miss")
+            files.append(name)
         except Exception as error:  # noqa: BLE001 - record per-shot, continue
             failures.append(f"{shot.get('id')}: {type(error).__name__}")
 
