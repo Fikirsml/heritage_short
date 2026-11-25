@@ -38,7 +38,9 @@ def _sync_gpu_modules(root):
 
 def package_job(stage, job, input_files=None):
     """Write job.json + inputs into the exchange dir. Returns job dir."""
-    job_id = f"{stage}-{utils.generate_hash(job)[:8]}"
+    input_files = list(input_files or [])
+    hashes = {Path(p).name: utils.hash_file(p) for p in input_files}
+    job_id = f"{stage}-{utils.generate_hash({'job': job, 'inputs': hashes})[:16]}"
     root = exchange_root()
     job_dir = root / "jobs" / job_id
     (job_dir / "inputs").mkdir(parents=True, exist_ok=True)
@@ -67,7 +69,7 @@ def list_results(stage=None):
     return sorted(ids)
 
 
-def collect_results(dest_dir, stage=None):
+def collect_results(dest_dir, stage=None, job_id_filter=None):
     """Copy successful result files into dest_dir and merge the Colab
     results.jsonl into runs.jsonl. Idempotent: already-imported job ids
     are tracked in .cache/collected_jobs.json. Returns copied paths."""
@@ -86,6 +88,8 @@ def collect_results(dest_dir, stage=None):
                 continue
             entry = json.loads(line)
             job_id = entry.get("job_id")
+            if job_id_filter and job_id != job_id_filter:
+                continue
             if job_id in seen or (stage and entry.get("stage") != stage):
                 continue
             if entry.get("status") == "success":
@@ -96,7 +100,7 @@ def collect_results(dest_dir, stage=None):
                         shutil.copy2(src, target)
                         copied.append(target)
             new_entries.append(entry)
-            if job_id:
+            if job_id and entry.get("status") == "success" and not entry.get("error"):
                 seen.add(job_id)
 
     if new_entries:
