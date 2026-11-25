@@ -77,3 +77,7 @@ ffmpeg assemble ◄─ collect (results + log merge) ◄───────┘
 - `outputs/keyframes|shots|music|narration|radio_cut|final/` — generated, gitignored
 - `outputs/kept/` — hand-picked artifacts retained for assessment (tracked)
 - `exchange/` — local fallback for the Drive exchange dir (gitignored)
+
+## Creative input ingestion
+
+`inputs/narration.txt`, `inputs/story_brief.md` and `inputs/prompts/storyboard.md` feed Gemini storyboard generation. The approved narration replaces any generated narration before schema validation. Downstream stages continue consuming storyboard.json. Regenerate after creative edits; existing generated media may need invalidation.
