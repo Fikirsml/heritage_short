@@ -80,6 +80,12 @@ def video_job(storyboard, quality):
     return {'fps': 24, 'shots': shots, 'quality': quality}
 
 
+def music_job(storyboard):
+    music = dict(storyboard["music"])
+    music.update(model="facebook/musicgen-small", seed=music.get("seed", 42))
+    return {"music": music, "worker_version": 1}
+
+
 def stage_package(storyboard, quality='draft'):
     keyframes = [
         OUTPUT_DIR / "keyframes" / f"{shot['id']}.png"
@@ -88,7 +94,7 @@ def stage_package(storyboard, quality='draft'):
     existing = [p for p in keyframes if p.is_file()]
 
     music_dir = exchange.package_job(
-        "music", {"music": storyboard["music"]}
+        "music", music_job(storyboard)
     )
     video_dir = exchange.package_job(
         "video",
@@ -105,7 +111,9 @@ def stage_package(storyboard, quality='draft'):
 
 def stage_collect(storyboard=None, quality='draft'):
     copied = []
-    copied += exchange.collect_results(OUTPUT_DIR / "music", stage="music")
+    if storyboard is not None:
+        music_dir = exchange.package_job("music", music_job(storyboard))
+        copied += exchange.collect_results(OUTPUT_DIR / "music", stage="music", job_id_filter=music_dir.name)
     if storyboard is not None:
         keyframes = [OUTPUT_DIR / "keyframes" / f"{s['id']}.png" for s in storyboard["shots"]]
         job_dir = exchange.package_job("video", video_job(storyboard, quality), [p for p in keyframes if p.is_file()])
@@ -154,7 +162,7 @@ def print_handoff():
         f"Exchange dir: {root}\n"
         "If it is not a Drive-synced folder, upload it to Google Drive\n"
         "as 'heritage-exchange' at My Drive root, then:\n"
-        "  1. notebooks/music_ace_step.ipynb -> Runtime > Run all\n"
+        "  1. notebooks/musicgen.ipynb -> Runtime > Run all\n"
         "  2. notebooks/video_wan22.ipynb    -> Runtime > Run all\n"
         "  3. Let Drive sync results/ back locally\n"
         "Then:  python -m pipeline.run --resume\n"
