@@ -19,3 +19,6 @@ espeakng-loader>=0.2.4 # pip-bundled espeak-ng (no brew needed)
 # and numpy 1.x (torch 2.2 wheels are built against numpy 1)
 transformers>=4.40,<5
 numpy<2
+
+# Portable local video encoding fallback
+imageio-ffmpeg==0.8.1
