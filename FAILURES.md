@@ -161,3 +161,7 @@ User confirmed first integrated smoke run succeeded with cache_hit=false, and se
 - F020 (resolved): bitsandbytes 0.50.2 installed and standalone NF4 passed, but Diffusers availability false until session restart; after restart availability true and minimum version check passed.
 - F021 (workaround verified): offline snapshot completeness check reported nine missing files including documentation/assets. Normal online from_pretrained loading succeeded; no claim that full snapshot is complete.
 - User-reported smoke success: 17 frames, 24 fps, six steps, seed 42, loading 148.4 seconds. Video saved to Drive experiment folder. Generation latency not captured in supplied metrics. Worker integration and image conditioning pending.
+
+### Wan image conditioning follow-up
+
+User reports successful standalone image-to-video generation using WanImageToVideoPipeline.from_pipe(pipe, expand_timesteps=True), sharing the quantized components, 480x480, 17 frames, six steps, guidance 3, seed 42. F018 standalone compatibility resolved. Integrated worker and cache remain unverified; no I2V latency or memory measurement supplied. Final/ultra 20 steps are proposed production settings, not benchmarked.
