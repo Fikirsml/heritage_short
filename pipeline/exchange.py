@@ -81,6 +81,8 @@ def collect_results(dest_dir, stage=None, job_id_filter=None):
     marker = utils.CACHE_DIR / "collected_jobs.json"
     seen = set(utils.load_json(marker)) if marker.is_file() else set()
 
+    record_marker = utils.CACHE_DIR / "collected_records.json"
+    records = set(utils.load_json(record_marker)) if record_marker.is_file() else set()
     copied, new_entries = [], []
     if log_path.is_file():
         for line in log_path.read_text(encoding="utf-8").splitlines():
@@ -92,6 +94,9 @@ def collect_results(dest_dir, stage=None, job_id_filter=None):
                 continue
             if job_id in seen or (stage and entry.get("stage") != stage):
                 continue
+            record = utils.generate_hash(entry)
+            if record in records:
+                continue
             if entry.get("status") == "success":
                 for name in entry.get("files", []):
                     src = results_dir / job_id / name
@@ -100,6 +105,7 @@ def collect_results(dest_dir, stage=None, job_id_filter=None):
                         shutil.copy2(src, target)
                         copied.append(target)
             new_entries.append(entry)
+            records.add(record)
             if job_id and entry.get("status") == "success" and not entry.get("error"):
                 seen.add(job_id)
 
@@ -108,5 +114,6 @@ def collect_results(dest_dir, stage=None, job_id_filter=None):
             for entry in new_entries:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         utils.save_json(sorted(seen), marker)
+        utils.save_json(sorted(records), record_marker)
 
     return copied
