@@ -209,6 +209,8 @@ def setup_directories():
         OUTPUT_DIR / "keyframes",
         OUTPUT_DIR / "shots",
         OUTPUT_DIR / "narration",
+        OUTPUT_DIR / "radio_cut",
+        OUTPUT_DIR / "kept",
         OUTPUT_DIR / "music",
         OUTPUT_DIR / "final",
         CACHE_DIR

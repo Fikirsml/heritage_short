@@ -2,3 +2,13 @@
 .venv/
 __pycache__/
 *.pyc
+
+.cache/
+.pytest_cache/
+.DS_Store
+.env.*
+!.env.example
+kaggle.json
+outputs/*/*
+!outputs/*/.gitkeep
+!outputs/kept/**
