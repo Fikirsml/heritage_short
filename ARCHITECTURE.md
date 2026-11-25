@@ -11,7 +11,8 @@ truth — every stage reads it and re-validates it against
 ```
 Gemini ──► storyboard.json ──► Cloudflare keyframes ─┐
              │                                      │ (Drive exchange)
-             ├─► Gemini TTS narration.wav           ▼
+             ├─► TTS narration.wav ────────────────►▼
+             │     (TTS_PROVIDER: kokoro local | gemini API)
              │                            Colab: gpu_video.py  → shots/*.mp4
              └─► music job ──────────────────► gpu_music.py  → music.wav
                                                         │
@@ -25,7 +26,14 @@ ffmpeg assemble ◄─ collect (results + log merge) ◄───────┘
 - **`pipeline/run.py`** — orchestrator (`--stage`, `--all`, `--resume`).
   Prints the Colab handoff checklist after `package`.
 - **`pipeline/storyboard.py`** — Gemini → `storyboard.json`, schema-validated.
-- **`pipeline/gemini_client.py`** — Gemini TTS → `outputs/narration/narration.wav`.
+- **`pipeline/tts.py`** — narration provider dispatch on `TTS_PROVIDER`
+  (`kokoro` default, `gemini` optional). Gemini voice names are mapped to the
+  Kokoro default when the local provider is selected.
+- **`pipeline/kokoro_client.py`** — local Kokoro-82M TTS →
+  `outputs/narration/narration.wav`. CPU-only, ~330 MB HF weights on first
+  call, uses `espeakng-loader` (pip) or system espeak-ng for English G2P.
+  Results cached by script+voice+speed hash; `cost_usd: 0.0`.
+- **`pipeline/gemini_client.py`** — Gemini TTS (optional provider).
 - **`pipeline/cloudflare_client.py`** — Workers AI flux-1-schnell →
   `outputs/keyframes/<shot_id>.png`, sha256-cached in `.cache/`.
 - **`pipeline/exchange.py`** — `package_job()` writes `job.json` + inputs and
@@ -49,7 +57,8 @@ ffmpeg assemble ◄─ collect (results + log merge) ◄───────┘
 
 `runs.jsonl` — append-only, one object per model call or notable event:
 `timestamp`, `job_id`, `stage`, `shot_id`, `model`, `parameters`, `seed`,
-`latency_seconds`, `cost_usd`, `gpu_minutes`, `status` (success/failed/fallback),
+`latency_seconds`, `cost_usd` (0.0 for local Kokoro; cache hits log
+`parameters.cached: true`), `gpu_minutes`, `status` (success/failed/fallback),
 `error`, `files` (Colab entries). Colab entries are written to
 `results.jsonl` on Drive and merged on `collect`.
 

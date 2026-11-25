@@ -51,10 +51,10 @@ def stage_keyframes(storyboard):
 
 
 def stage_narration(storyboard):
-    from pipeline.gemini_client import generate_narration
+    from pipeline import tts
 
     narration = storyboard["narration"]
-    path = generate_narration(
+    path = tts.generate_narration(
         narration["script"],
         voice=narration.get("voice"),
         model=narration.get("model"),

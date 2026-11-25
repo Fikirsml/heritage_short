@@ -13,8 +13,10 @@ personal college journey and the role of faith in God through challenges.
 ```
 pipeline/          # stage modules + Colab-side GPU workers
   run.py           # orchestrator: python -m pipeline.run --stage <name>
-  storyboard.py    # Gemini: storyboard.json generation
-  gemini_client.py # Gemini TTS narration
+  storyboard.py    # Gemini: storyboard.json generation (reads story_brief.md)
+  tts.py           # narration provider dispatch (TTS_PROVIDER env)
+  kokoro_client.py # local Kokoro-82M TTS (offline, free)
+  gemini_client.py # Gemini TTS narration (optional provider)
   cloudflare_client.py # Workers AI keyframe images
   exchange.py      # Drive job packaging + result collection
   gpu_music.py     # ACE-Step 1.5 worker (runs on Colab)
@@ -23,6 +25,7 @@ pipeline/          # stage modules + Colab-side GPU workers
   smoke_test.py    # live provider connectivity checks
 schema/            # storyboard.json JSON Schema
 storyboard.json    # single source of truth for all stages
+story_brief.md     # YOUR story details — input to the story stage (fill in TODOs)
 notebooks/         # Colab notebooks (GPU handoff — see COLAB.md)
 tests/             # pytest unit tests (no live calls)
 outputs/
@@ -45,6 +48,18 @@ cp .env.example .env   # fill in real keys — .env is gitignored
 
 Requires `ffmpeg` (`brew install ffmpeg`) plus keys in `.env`.
 
+Narration defaults to **local Kokoro-82M** (`TTS_PROVIDER=kokoro` — free,
+offline, CPU; first run downloads ~330 MB of weights). Deps are pip-only:
+`pip install "kokoro>=0.9.2" "misaki[en]>=0.9.4" espeakng-loader`
+(espeakng-loader bundles the espeak-ng binary; a system `brew install
+espeak-ng` also works — see FAILURES.md F009 for ffmpeg status).
+Set `TTS_PROVIDER=gemini` to use Gemini TTS instead.
+
+Input order: fill in `story_brief.md` (your real story details) →
+`--stage story --force` generates a real `storyboard.json` → hand-edit it if
+needed → the remaining stages consume it. Without `story_brief.md` the story
+stage uses a generic premise.
+
 ```bash
 python -m pipeline.run --all       # story → keyframes → narration → package Colab jobs
 python -m pipeline.run --resume    # after Colab + Drive sync: collect → assemble
@@ -59,6 +74,7 @@ lands in `outputs/final/heritage_short.mp4`; audio-only preview in
 ```bash
 python -m pytest -v                # unit tests (offline)
 python -m pipeline.smoke_test      # live provider checks (may incur charges)
+python -m pipeline.smoke_test --provider kokoro   # local TTS check (free)
 ```
 
 **Reproducibility limitation**: the two Colab notebook runs are manual —
@@ -72,5 +88,14 @@ ffmpeg zoompan clips so the film always assembles.
 - **ARCHITECTURE.md** — module layout and data flow
 - **EXPERIMENTS.md** — provider/model experiment log
 - **FAILURES.md** — things that broke and how they were fixed
+- **COSTS.md** — per-run and cumulative spend
+- **ETHICS.md** — consent, AI disclosure, licensing, privacy
+
+- **DESIGN.md** — creative brief and story design
+- **ARCHITECTURE.md** — module layout and data flow
+- **EXPERIMENTS.md** — provider/model experiment log
+- **FAILURES.md** — things that broke and how they were fixed
+- **COSTS.md** — per-run and cumulative spend
+- **ETHICS.md** — consent, AI disclosure, licensing, privacy
 - **COSTS.md** — per-run and cumulative spend
 - **ETHICS.md** — consent, AI disclosure, licensing, privacy

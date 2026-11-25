@@ -10,3 +10,12 @@ pytest>=8.0.0
 
 jsonschema>=4.23
 kaggle>=1.7
+
+# Local narration TTS (TTS_PROVIDER=kokoro)
+kokoro>=0.9.2          # pulls in torch (CPU OK on macOS x86_64/arm64)
+misaki[en]>=0.9.4      # English G2P for Kokoro
+espeakng-loader>=0.2.4 # pip-bundled espeak-ng (no brew needed)
+# kokoro pins torch<2.6 -> needs transformers 4.x (v5 requires torch>=2.6)
+# and numpy 1.x (torch 2.2 wheels are built against numpy 1)
+transformers>=4.40,<5
+numpy<2

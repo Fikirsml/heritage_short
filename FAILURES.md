@@ -79,3 +79,21 @@ Append-only record of things that broke, misbehaved, or produced bad output — 
 - Resolution: Switch GPU execution to Google Colab.
 - Remaining risk: Model memory requirements and session limits.
 - Status: GPU access resolved; model execution pending.
+
+### F008 — Gemini TTS unavailable; narration moved to a local model
+
+- **Date**: 2026-11-25
+- **Stage**: smoke test (Gemini TTS) / narration
+- **Symptom**: Gemini text and Cloudflare images pass, but every TTS attempt fails — the voice model `gemini-2.5-flash-preview-tts` isn't reachable for this account (latest error: `RuntimeError` after the earlier HTTP 400/404s).
+- **Root cause**: The preview TTS model name isn't available to this API key (renamed or gated).
+- **Fix**: Added a free local fallback — Kokoro-82M runs on this Mac's CPU with no API key. `TTS_PROVIDER=kokoro` is now the default; `TTS_PROVIDER=gemini` keeps the old path. Install: `pip install "kokoro>=0.9.2" "misaki[en]>=0.9.4" espeakng-loader` (espeakng-loader bundles the espeak binary; no brew needed — this Mac has no Homebrew).
+- **Status**: resolved via fallback; Gemini TTS remains open if preview access is granted later.
+
+### F009 — No ffmpeg on this Mac
+
+- **Date**: 2026-11-25
+- **Stage**: assemble / environment setup
+- **Symptom**: `ffmpeg`/`ffprobe` are not on PATH. (Earlier, `brew` itself was missing; Homebrew was installed on 2026-11-25 and `brew install espeak-ng` now works — binary at `/usr/local/bin/espeak-ng`.)
+- **Root cause**: ffmpeg was never installed; `brew install ffmpeg` was never run.
+- **Fix**: `brew install ffmpeg`. Until then the assemble/radio_cut stages can't run locally; narration (Kokoro) and all provider stages work without it.
+- **Status**: open — blocked on `brew install ffmpeg`

@@ -51,33 +51,7 @@ Rules:
 """
 
 
-def _parse_json_object(text):
-    """Extract the first JSON object from a model response."""
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if not match:
-        raise RuntimeError("Gemini response contained no JSON object")
-    return json.loads(match.group(0))
-
-
-def generate_storyboard(duration_seconds=75, shot_count=6, model=None):
-    """Call Gemini, validate against the schema, write storyboard.json."""
-    model = model or os.getenv("GEMINI_MODEL") or DEFAULT_TEXT_MODEL
-    client = genai.Client(api_key=get_env("GEMINI_API_KEY"))
-    prompt = PROMPT_TEMPLATE.format(
-        duration=duration_seconds, shot_count=shot_count
-    )
-
-    start = time.perf_counter()
-    try:
-        response = client.models.generate_content(
-            model=model,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json"
-            ),
-        )
-        storyboard = _parse_json_object(response.text)
-        schema = load_json(SCHEMA_FILE)
+def _LAarat eload_json(SCHEMA_FILE)
 
         # Fill defaults the generator may omit, then validate the result.
         storyboard.setdefault(
@@ -107,7 +81,8 @@ def generate_storyboard(duration_seconds=75, shot_count=6, model=None):
         log_run(
             stage="story",
             model=model,
-            parameters={"duration": duration_seconds, "shots": shot_count},
+            parameters={"duration": duration_seconds, "shots": shot_count,
+                        "brief": brief_source or "default"},
             latency=time.perf_counter() - start,
             status="failed",
             error=type(error).__name__,
@@ -117,7 +92,8 @@ def generate_storyboard(duration_seconds=75, shot_count=6, model=None):
     log_run(
         stage="story",
         model=model,
-        parameters={"duration": duration_seconds, "shots": shot_count},
+        parameters={"duration": duration_seconds, "shots": shot_count,
+                    "brief": brief_source or "default"},
         latency=time.perf_counter() - start,
     )
     return storyboard

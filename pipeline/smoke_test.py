@@ -164,11 +164,28 @@ def test_gemini_tts(model, voice):
     write_pcm_wav(path, pcm, rate)
 
 
+# -----------------------------------
+# Kokoro (local TTS)
+# -----------------------------------
+
+def test_kokoro():
+    """Verify local Kokoro-82M TTS (needs kokoro, misaki[en], espeak-ng)."""
+    from pipeline.utils import OUTPUT_DIR
+    from pipeline import kokoro_client
+    path = OUTPUT_DIR / "narration" / "kokoro_test.wav"
+    path.unlink(missing_ok=True)
+    pcm, rate = kokoro_client.synthesize_speech(
+        "Say clearly: This is a narration test."
+    )
+    write_pcm_wav(path, pcm, rate)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--provider", choices=["gemini", "gemini-tts", "cloudflare", "kaggle"])
+    parser.add_argument("--provider", choices=["gemini", "gemini-tts", "cloudflare", "kaggle", "kokoro"])
     args = parser.parse_args()
     setup_directories()
+    from pipeline import kokoro_client  # for the model name in logs; lazy deps
     text_model = os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"
     tts_model = os.getenv("GEMINI_TTS_MODEL") or "gemini-2.5-flash-preview-tts"
     voice = os.getenv("GEMINI_TTS_VOICE") or "Kore"
@@ -177,7 +194,8 @@ def main():
         "gemini": (text_model, lambda: test_gemini(text_model), {"provider": "Google", "prompt": "Reply with the word OK."}),
         "gemini-tts": (tts_model, lambda: test_gemini_tts(tts_model, voice), {"provider": "Google", "voice": voice, "prompt": "Say clearly: This is a narration test."}),
         "cloudflare": (image_model, lambda: test_cloudflare(image_model), {"provider": "Cloudflare", "prompt": "A simple green tree on a white background."}),
-        "kaggle": (None, test_kaggle, {"provider": "Kaggle", "test": "api_connectivity"})
+        "kaggle": (None, test_kaggle, {"provider": "Kaggle", "test": "api_connectivity"}),
+        "kokoro": (kokoro_client.MODEL, test_kokoro, {"provider": "Kokoro", "local": True, "prompt": "Say clearly: This is a narration test."})
     }
     results = {}
     for name, (model, function, parameters) in checks.items():

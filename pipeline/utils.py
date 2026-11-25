@@ -22,6 +22,7 @@ OUTPUT_DIR = ROOT_DIR / "outputs"
 CACHE_DIR = ROOT_DIR / ".cache"
 LOG_FILE = ROOT_DIR / "runs.jsonl"
 STORYBOARD_FILE = ROOT_DIR / "storyboard.json"
+STORY_BRIEF_FILE = ROOT_DIR / "story_brief.md"
 SCHEMA_FILE = ROOT_DIR / "schema" / "storyboard.schema.json"
 
 load_dotenv(ROOT_DIR / ".env")
