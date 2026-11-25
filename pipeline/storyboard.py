@@ -42,7 +42,7 @@ def generate_storyboard(duration_seconds=75, shot_count=10):
         storyboard["target_duration_seconds"] = duration_seconds
         storyboard.setdefault("narration", {})["script"] = narration
         storyboard["narration"].setdefault("voice", "Kore")
-        storyboard["music"].setdefault("model", "ace-step-1.5")
+        storyboard["music"].setdefault("model", "facebook/musicgen-small")
         storyboard["music"]["duration_seconds"] = duration_seconds
         for index, shot in enumerate(storyboard["shots"]):
             shot.setdefault("id", f"shot_{index+1:02d}")
