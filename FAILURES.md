@@ -105,3 +105,11 @@ Append-only record of things that broke, misbehaved, or produced bad output — 
 - **Alternative**: FFmpeg via pip-installed imageio-ffmpeg==0.8.1, rather than Homebrew.
 - **Verification**: Bundled FFmpeg 9.0.2-tessus returned exit code 0; a two-second H.264 black-screen MP4 was encoded and played successfully on the user's Mac.
 - **Status**: Installation blocker resolved via fallback. Pipeline regression tests pending; standalone ffprobe remains unavailable.
+
+### F010 — Regression tests after portable FFmpeg and cache changes
+
+- Date: 2026-11-25
+- Evidence: 32 passed, 2 failed in 10.07 seconds at e1b7334.
+- Causes: old FFmpeg test mocked only system lookup; failed GPU job records were imported repeatedly after retry support was introduced.
+- Fix: mock both executable sources and test bundled fallback; deduplicate result records separately from completed job IDs so failed jobs can be retried.
+- Status: patch committed; local regression verification pending.
