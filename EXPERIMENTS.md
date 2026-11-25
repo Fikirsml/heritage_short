@@ -33,3 +33,7 @@ User confirmed first integrated smoke run succeeded with cache_hit=false, and se
 ### Wan 2.2 quantized smoke experiment (2026-11-26)
 
 User-reported successful standalone text-to-video on Tesla T4 using Wan-AI/Wan2.2-TI2V-5B-Diffusers, NF4 transformer/text encoder, FP16 compute, FP32 VAE, 480x480, 17 frames, six steps, 24 fps, seed 42. Loading 148.4 s; peak allocated GPU memory 13.92 GiB. Nominal headroom 0.64 GiB against previously measured 14.56 GiB capacity; not a measurement of free VRAM. Generation latency unavailable. Recommend 480 generation with export upscaling, pending longer-clip and image-conditioning verification. Evidence saved by user to Drive experiments/wan_smoke. No production worker validation yet.
+
+### Wan image conditioning follow-up
+
+User reports successful standalone image-to-video generation using WanImageToVideoPipeline.from_pipe(pipe, expand_timesteps=True), sharing the quantized components, 480x480, 17 frames, six steps, guidance 3, seed 42. F018 standalone compatibility resolved. Integrated worker and cache remain unverified; no I2V latency or memory measurement supplied. Final/ultra 20 steps are proposed production settings, not benchmarked.
