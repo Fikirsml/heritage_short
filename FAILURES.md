@@ -134,3 +134,9 @@ Append-only record of things that broke, misbehaved, or produced bad output — 
 - Creative evaluation (user): audio 4/5, emotional alignment 3/5, prompt adherence 4/5, narration suitability 4/5; mean 3.75/5. No free-text observations supplied.
 - Tradeoffs: MusicGen weights CC BY-NC 4.0; noncommercial use only under weight license. Assignment names ACE-Step 1.5; substitution disclosed, acceptance not confirmed. Longer scores require segmented generation and crossfades; continuity not yet tested.
 - Status: short standalone generation blocker resolved via substitution; integrated worker, cache and full-length soundtrack verification pending. Legacy ACE-Step 1.5 itself was not successfully tested.
+
+#### MusicGen integration verification — 2026-11-26
+
+- User-reported local regression run after commit 3b17c91: `python -m pytest -q` — 38 passed in 15.88s, no failures or skips.
+- Offline integration tests passed, including model migration, seed preservation and crossfade behavior.
+- Integrated Colab inference, cache reuse and full-length soundtrack remain pending.
