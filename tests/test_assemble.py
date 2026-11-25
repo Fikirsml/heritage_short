@@ -71,5 +71,16 @@ def test_radio_cut_requires_narration(monkeypatch, tmp_path):
 
 def test_require_ffmpeg_missing(monkeypatch):
     monkeypatch.setattr(assemble.shutil, "which", lambda name: None)
-    with pytest.raises(RuntimeError, match="ffmpeg"):
+    import imageio_ffmpeg
+    def missing():
+        raise RuntimeError("missing")
+    monkeypatch.setattr(imageio_ffmpeg, "get_ffmpeg_exe", missing)
+    with pytest.raises(RuntimeError, match="(?i)ffmpeg"):
         assemble._require_ffmpeg()
+
+
+def test_require_ffmpeg_bundled(monkeypatch):
+    import imageio_ffmpeg
+    monkeypatch.setattr(assemble.shutil, "which", lambda name: None)
+    monkeypatch.setattr(imageio_ffmpeg, "get_ffmpeg_exe", lambda: "/bundled/ffmpeg")
+    assert assemble._require_ffmpeg() == "/bundled/ffmpeg"
