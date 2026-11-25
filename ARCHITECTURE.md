@@ -46,6 +46,8 @@ ffmpeg assemble ◄─ collect (results + log merge) ◄───────┘
 - **`pipeline/assemble.py`** — ffmpeg concat to uniform 480x480/24fps clips
   (`tpad` pads short clips), narration+music mix (`amix`, music at ~30%).
   Missing shot videos fall back to zoompan clips from keyframes.
+  Executable resolution prefers system FFmpeg, then imageio-ffmpeg==0.8.1.
+  Assembly does not currently require ffprobe. See F009 and E001.
 - **`pipeline/utils.py`** — env, JSON, storyboard validation, hashing/caching,
   `runs.jsonl` logging, retry, `write_pcm_wav`, directory setup.
 - **`pipeline/smoke_test.py`** — live provider connectivity checks.
