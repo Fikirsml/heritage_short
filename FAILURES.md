@@ -113,3 +113,8 @@ Append-only record of things that broke, misbehaved, or produced bad output — 
 - Causes: old FFmpeg test mocked only system lookup; failed GPU job records were imported repeatedly after retry support was introduced.
 - Fix: mock both executable sources and test bundled fallback; deduplicate result records separately from completed job IDs so failed jobs can be retried.
 - Status: patch committed; local regression verification pending.
+
+#### F010 verification — 2026-11-25
+
+- Local commit 9804cee: `python -m pytest -q` returned 35 passed in 2.46s.
+- Status: resolved for offline regression suite. Live GPU and full assembly verification remain pending.
