@@ -27,7 +27,7 @@ def test_concat_file(tmp_path):
     ]
 
 
-def test_fallback_clip_invokes_zoompan(monkeypatch, tmp_path):
+def test_fallback_clip_invokes_layered_motion(monkeypatch, tmp_path):
     calls = []
     _fake_ffmpeg(monkeypatch, calls)
     keyframe = tmp_path / "k.png"
@@ -36,8 +36,8 @@ def test_fallback_clip_invokes_zoompan(monkeypatch, tmp_path):
     assemble.build_fallback_clip(keyframe, tmp_path / "c.mp4", 5)
 
     cmd = " ".join(calls[0])
-    assert "zoompan" in cmd
-    assert calls[0][calls[0].index("-t") + 1] == "5"
+    assert "overlay" in cmd and "gblur" in cmd
+    assert calls[0][calls[0].index("-frames:v") + 1] == "120"
 
 
 def test_normalize_clip_pads_to_duration(monkeypatch, tmp_path):
@@ -48,9 +48,10 @@ def test_normalize_clip_pads_to_duration(monkeypatch, tmp_path):
 
     assemble.normalize_clip(src, tmp_path / "out.mp4", 7)
 
-    cmd = " ".join(calls[0])
+    cmd = " ".join(calls[-1])
+    assert "minterpolate" in cmd
     assert "tpad=stop=-1:stop_mode=clone" in cmd
-    assert calls[0][calls[0].index("-t") + 1] == "7"
+    assert calls[-1][calls[-1].index("-t") + 1] == "7"
 
 
 def test_assemble_missing_assets(monkeypatch, tmp_path):
