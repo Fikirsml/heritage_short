@@ -179,3 +179,7 @@ Kaggle GPU remained unavailable and the original Colab account exhausted its quo
 User reported 34 passed, 4 failed in 12.57s after pulling 9285fe5. Two assembly assertions expected obsolete zoompan or the first subprocess call rather than the new duration probe followed by interpolation. Two Kokoro tests inherited the approved am_michael environment voice instead of isolating af_heart. Updated assertions and test environment; rerun pending. No production narration changes. Mocked tests do not verify actual FFmpeg filter execution.
 
 Verification: user reported 38 passed in 3.16s at 745ce18; both production jobs packaged successfully. Offline regression resolved; actual GPU inference and FFmpeg production filters remain unverified.
+
+
+## Wan production partial success — 2026-11-26
+User-reported job video-8c1d0793623cfbe4: 2/5 clips generated (shot_01_graduation, shot_08_dawn_horizon); shots 02, 06, 09 failed with CUDA OOM requesting 128 MiB. T4 capacity 14.56 GiB, process usage 14.46–14.49 GiB, free 71.81–103.81 MiB, reserved unallocated 713.75–737.75 MiB. Worker reported success despite partial completion. Wall time 1118.845 s, reported GPU minutes 18.647, cost unknown. Allocator fragmentation may contribute but is not established as root cause. Preserve successful clips; prioritize final assembly with fallback for missing clips. Clip playback and actual frame counts not independently verified.
