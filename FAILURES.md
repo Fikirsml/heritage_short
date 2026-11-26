@@ -165,3 +165,7 @@ User confirmed first integrated smoke run succeeded with cache_hit=false, and se
 ### Wan image conditioning follow-up
 
 User reports successful standalone image-to-video generation using WanImageToVideoPipeline.from_pipe(pipe, expand_timesteps=True), sharing the quantized components, 480x480, 17 frames, six steps, guidance 3, seed 42. F018 standalone compatibility resolved. Integrated worker and cache remain unverified; no I2V latency or memory measurement supplied. Final/ultra 20 steps are proposed production settings, not benchmarked.
+
+### F022 — Gemini shot ID formatting
+
+User-reported schema ValidationError: generated shot ID contained whitespace. Normalize string IDs to filename-safe characters before validation; retain schema and duplicate-ID checks. Failed response was not saved by the existing pipeline; regeneration required. Fix committed, live verification pending.
