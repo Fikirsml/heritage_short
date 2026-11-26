@@ -16,6 +16,9 @@ GPU stages (music, video) run manually in Colab — see COLAB.md.
 import argparse
 import copy
 import sys
+import os
+import re
+import wave
 
 from pipeline import exchange, utils
 from pipeline.utils import OUTPUT_DIR, STORYBOARD_FILE
@@ -40,6 +43,11 @@ def stage_story(force=False):
     return result
 
 
+STYLE = "Cinematic realism, recurring anonymous student in neutral charcoal clothing, faces hidden, restrained cool-to-warm palette, centered composition, no readable generated text."
+
+def visual_prompt(shot):
+    return re.split(r"\bMotion:\s*", shot["prompt"], maxsplit=1, flags=re.I)[0].strip()
+
 def stage_keyframes(storyboard):
     from pipeline.cloudflare_client import generate_image
 
@@ -49,7 +57,7 @@ def stage_keyframes(storyboard):
         if out.is_file() and out.stat().st_size > 0:
             print(f"[keyframes] {shot['id']}: cached")
         else:
-            generate_image(shot["prompt"], out_path=out)
+            generate_image(visual_prompt(shot) + " " + STYLE, out_path=out)
             print(f"[keyframes] {shot['id']}: generated")
         made.append(out)
     return made
@@ -61,10 +69,25 @@ def stage_narration(storyboard):
     narration = storyboard["narration"]
     path = tts.generate_narration(
         narration["script"],
-        voice=narration.get("voice"),
+        voice=(os.getenv("KOKORO_VOICE") or "af_heart") if (os.getenv("TTS_PROVIDER") or "kokoro").strip().lower() == "kokoro" else narration.get("voice"),
         model=narration.get("model"),
     )
-    print(f"[narration] wrote {path}")
+    with wave.open(str(path), "rb") as audio:
+        seconds = audio.getnframes() / audio.getframerate()
+    print(f"[narration] wrote {path} ({seconds:.2f}s)")
+    if seconds > 88:
+        print("[timing] Narration exceeds 88s; review pacing or shorten before final assembly.")
+    else:
+        target = max(60, round(seconds + 2, 2))
+        total = sum(s["duration_seconds"] for s in storyboard["shots"])
+        durations = [round(s["duration_seconds"] * target / total, 2) for s in storyboard["shots"]]
+        durations[-1] = round(target - sum(durations[:-1]), 2)
+        for shot, duration in zip(storyboard["shots"], durations):
+            shot["duration_seconds"] = duration
+        storyboard["target_duration_seconds"] = target
+        storyboard["music"]["duration_seconds"] = target
+        utils.save_json(storyboard, STORYBOARD_FILE)
+        print(f"[timing] provisional proportional timeline: {target:.2f}s; review spoken cue alignment.")
     return path
 
 
@@ -76,7 +99,9 @@ def video_job(storyboard, quality):
     profile = quality_profile(quality)
     shots = copy.deepcopy(storyboard['shots'])
     for shot in shots:
-        shot.setdefault('video', {}).update({k: profile[k] for k in ('width', 'height', 'steps', 'frames')})
+        shot.setdefault('video', {}).update({k: profile[k] for k in ('width', 'height', 'steps', 'frames', 'guidance')})
+        motion = shot.get("motion_prompt") or (re.split(r"\bMotion:\s*", shot["prompt"], maxsplit=1, flags=re.I)[1] if re.search(r"\bMotion:\s*", shot["prompt"], flags=re.I) else "")
+        shot["prompt"] = visual_prompt(shot) + " " + STYLE + (" Motion: " + motion if motion else "")
     return {'fps': 24, 'shots': shots, 'quality': quality}
 
 
