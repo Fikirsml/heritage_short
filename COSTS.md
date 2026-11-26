@@ -29,3 +29,7 @@ Default music worker: `facebook/musicgen-small`, FP16 on Colab T4. See [FAILURES
 ### Integrated MusicGen cache verification — 2026-11-26 EAT
 
 User confirmed first integrated smoke run succeeded with cache_hit=false, and second run succeeded with cache_hit=true. Second result: UTC 2026-11-25T22:35:11.152295+00:00, job smoke-music-1795646111, model facebook/musicgen-small, prompt soft piano note sequence, duration requested 5 s, seed 42, music.wav, status success, error null, latency 0.027 s, gpu_minutes 0.0 (rounded), cost_usd 0.0, peak_gpu_memory_gib null (not measured on cache hit). Earlier standalone generation took 9.863 s; illustrative comparison is about 365x faster, not a controlled same-job speedup because first integrated latency was not supplied and prompts differ. Integrated short generation, playback and cache reuse verified by user; full-length generation remains pending.
+
+
+## Full-length MusicGen production — 2026-11-26
+User-reported worker result: music-0292a71a10559697, facebook/musicgen-small, requested duration 89.33 s, seed 42, success, music.wav, cache miss, latency 153.971 s, reported GPU minutes 2.566 (worker wall time / 60), peak allocated GPU memory 1.598 GiB, reported API cost USD 0.00. Public checkpoint download 2.36 GB. Missing HF_TOKEN and deprecated torch_dtype warnings were nonfatal. Audio duration and creative quality have not been independently verified. Runtime allocation and total infrastructure cost were not measured.
