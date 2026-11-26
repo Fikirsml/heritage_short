@@ -51,19 +51,38 @@ def build_fallback_clip(keyframe, out_path, duration, size=SIZE, fps=FPS):
     _require_ffmpeg()
     width, height = size
     frames = max(1, round(duration * fps))
-    # Keep the foreground's original aspect ratio; animate the backdrop only
-    # in a later pass if needed. A static fit is safer than cropping story props.
+    # Move the intact foreground inside a safe margin; animate the backdrop
+    # independently for a subtle layered-motion effect.
+    index = Path(keyframe).stem.split("_")[1] if "_" in Path(keyframe).stem else ""
+    styles = {
+        "01": (0.88, 0.98, 0, 0), "02": (0.98, 0.88, 0, 0),
+        "03": (0.91, 0.91, 0.035, 0), "04": (0.96, 0.96, 0, 0),
+        "05": (0.88, 0.98, 0, 0), "06": (0.90, 0.94, 0, -0.025),
+        "07": (0.88, 0.98, 0, 0), "08": (0.90, 0.94, 0, -0.025),
+        "09": (0.98, 0.88, 0, 0), "10": (0.94, 0.97, 0, 0),
+    }
+    start, end, dx, dy = styles.get(index, (0.90, 0.98, 0, 0))
+    progress = f"min(t/{max(duration, 0.04)},1)"
+    ease = f"(0.5-0.5*cos(PI*{progress}))"
+    factor = f"({start}+({end-start})*{ease})"
+    short = min(width, height)
+    grade = "eq=brightness=-0.035:saturation=0.88," if index in ("02", "04") else ("eq=saturation=1.08:brightness=0.015," if index in ("08", "09", "10") else "")
     vf = (
         f"[0:v]split[bg][fg];"
         f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,"
         f"crop={width}:{height},gblur=sigma=24,eq=brightness=-0.12[back];"
-        f"[fg]scale={width}:{height}:force_original_aspect_ratio=decrease:"
-        f"force_divisible_by=2[front];"
-        f"[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1,format=yuv420p"
+        f"[fg]scale={short}:{short}:force_original_aspect_ratio=decrease,"
+        f"scale=w='trunc(iw*{factor}/2)*2':h='trunc(ih*{factor}/2)*2':eval=frame,"
+        f"{grade}setsar=1[front];"
+        f"[back][front]overlay=x='(W-w)/2+{dx}*W*(2*{ease}-1)':"
+        f"y='(H-h)/2+{dy}*H*(2*{ease}-1)':eval=frame,"
+        f"setsar=1,format=yuv420p"
     )
+    if index == "10":
+        vf += f",fade=t=out:st={max(0,duration-0.8)}:d=0.8"
     _run([
         "ffmpeg", "-y", "-loop", "1", "-framerate", str(fps), "-i", str(keyframe),
-        "-filter_complex", vf, "-frames:v", str(frames),
+        "-filter_complex_threads", "1", "-filter_complex", vf, "-frames:v", str(frames),
         "-c:v", "libx264", "-pix_fmt", "yuv420p",
         str(out_path),
     ])
