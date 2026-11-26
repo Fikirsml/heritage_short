@@ -114,6 +114,33 @@ def normalize_clip(src, dest, duration, size=SIZE, fps=FPS):
     return Path(dest)
 
 
+def editorial_keyframe(shot_id):
+    revised = OUTPUT_DIR / "keyframes_polished" / f"{shot_id}.png"
+    return revised if revised.is_file() else OUTPUT_DIR / "keyframes" / f"{shot_id}.png"
+
+
+def title_ass(size, duration):
+    w, h = size
+    short = min(w, h)
+    def ts(t):
+        cs = round(t * 100)
+        return f"{cs//360000}:{cs//6000%60:02}:{cs//100%60:02}.{cs%100:02}"
+    header = f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: {w}
+PlayResY: {h}
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Title,Arial,{int(short*.075)},&H00D8E9FF,&H00FFFFFF,&H00201810,&H80000000,-1,0,0,0,100,100,2,0,1,1,0,5,20,20,20,1
+Style: Sub,Arial,{int(short*.032)},&H00FFFFFF,&H00FFFFFF,&H00201810,&H80000000,0,0,0,0,100,100,0,0,1,1,0,5,20,20,20,1
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+    def line(start, end, style, y, text):
+        return f"Dialogue: 0,{ts(start)},{ts(end)},{style},,0,0,0,,{{\\\\pos({w//2},{int(h*y)})\\\\fad(250,250)}}{text}\n".replace("\\\\", "\\")
+    return header + line(0, 2.5, "Title", .36, "ONE DEGREE") + line(0, 2.5, "Sub", .45, "A story of faith, purpose and redirection") + line(max(0,duration-2), duration, "Title", .42, "AI-GENERATED CONTENT")
+
+
 def assemble(storyboard, out_path=None, size=SIZE, fps=FPS, shots_dir=None):
     """Build the final mp4. Returns (final_path, fallback_shot_ids)."""
     _require_ffmpeg()
@@ -134,12 +161,12 @@ def assemble(storyboard, out_path=None, size=SIZE, fps=FPS, shots_dir=None):
             build_degree_clip(dest, duration, size, fps)
             log_run(stage="assemble", model="procedural-degree", parameters={"duration": duration}, latency=0, status="success", shot_id=shot_id)
         elif hybrid and index in {"03","04","07","10"}:
-            build_still_clip(OUTPUT_DIR / "keyframes" / f"{shot_id}.png", dest, duration, size, fps)
+            build_still_clip(editorial_keyframe(shot_id), dest, duration, size, fps)
             log_run(stage="assemble", model="intentional-still", parameters={"duration": duration}, latency=0, status="success", shot_id=shot_id)
         elif generated.is_file() and generated.stat().st_size > 0:
             normalize_clip(generated, dest, duration, size, fps)
         else:
-            keyframe = OUTPUT_DIR / "keyframes" / f"{shot_id}.png"
+            keyframe = editorial_keyframe(shot_id)
             if not keyframe.is_file():
                 raise FileNotFoundError(
                     f"{shot_id}: no video clip and no keyframe at {keyframe}"
@@ -197,7 +224,15 @@ def assemble(storyboard, out_path=None, size=SIZE, fps=FPS, shots_dir=None):
             local_srt = Path(temp) / "captions.srt"
             shutil.copyfile(subtitles, local_srt)
             escaped = str(local_srt).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
-            cmd += ["-vf", f"subtitles='{escaped}'", "-c:v", "libx264", "-pix_fmt", "yuv420p"]
+            vf = f"subtitles='{escaped}'"
+            if shots_dir is not None and Path(shots_dir).parent.name == "final":
+                duration = sum(float(s["duration_seconds"]) for s in storyboard["shots"])
+                titles = Path(temp) / "titles.ass"
+                titles.write_text(title_ass(size, duration), encoding="utf-8")
+                vf = (f"eq=contrast=1.025:saturation=1.025,"
+                      f"drawbox=x=0:y=0:w=iw:h=ih:color=black@0.48:t=fill:enable='lt(t,2.5)+gte(t,{duration-2})',"
+                      f"subtitles='{titles}'," + vf)
+            cmd += ["-vf", vf, "-c:v", "libx264", "-pix_fmt", "yuv420p"]
             _run(cmd + [str(final)])
         return final, fallbacks
     cmd += ["-c:v", "copy", str(final)]
