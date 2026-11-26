@@ -144,7 +144,26 @@ def _generate_impl(job, out_dir, inputs_dir):
             else:
                 if pipe is None:
                     pipe = _load_pipe(model_id)
-                _generate_one(pipe, shot, inputs_dir, out_dir, fps)
+                import torch
+                import gc
+                (Path(out_dir) / name).unlink(missing_ok=True)
+                try:
+                    _generate_one(pipe, shot, inputs_dir, out_dir, fps)
+                except torch.cuda.OutOfMemoryError:
+                    if int(shot.get("video", {}).get("frames", 17)) <= 17:
+                        raise
+                    print(f"[video] {name}: CUDA OOM; retrying with 17 frames")
+                else:
+                    pass
+                # Retry outside the exception handler to release traceback tensors.
+                if not (Path(out_dir) / name).is_file():
+                    gc.collect()
+                    torch.cuda.empty_cache()
+                    retry = dict(shot, video=dict(shot.get("video", {}), frames=17))
+                    _generate_one(pipe, retry, inputs_dir, out_dir, fps)
+                    params["video"] = retry["video"]
+                    key = hashlib.sha256(json.dumps(params, sort_keys=True).encode()).hexdigest()
+                    cached = cache_dir / f"{key}.mp4"
                 temporary = cached.with_suffix(".tmp")
                 shutil.copy2(Path(out_dir) / name, temporary)
                 temporary.replace(cached)
