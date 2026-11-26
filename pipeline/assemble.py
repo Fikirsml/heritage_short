@@ -1,7 +1,7 @@
 """Assemble the final film with ffmpeg.
 
 Concatenates per-shot clips, then mixes narration and music on top.
-Fallback: any shot without a generated .mp4 gets a Ken Burns zoompan
+Fallback: any shot without a generated .mp4 gets a centered fit/blur
 clip built from its keyframe, so a failed or slow GPU video stage still
 produces a complete video.
 """
@@ -47,39 +47,18 @@ def _write_concat_file(clips, path):
 
 
 def build_fallback_clip(keyframe, out_path, duration, size=SIZE, fps=FPS):
-    """Ken Burns pan/zoom clip from a still image (GPU-video fallback)."""
+    """Centered fit/blur clip from a still image (GPU-video fallback)."""
     _require_ffmpeg()
     width, height = size
     frames = max(1, round(duration * fps))
-    # Move the intact foreground inside a safe margin; animate the backdrop
-    # independently for a subtle layered-motion effect.
-    index = Path(keyframe).stem.split("_")[1] if "_" in Path(keyframe).stem else ""
-    styles = {
-        "01": (0.88, 0.98, 0, 0), "02": (0.98, 0.88, 0, 0),
-        "03": (0.91, 0.91, 0.035, 0), "04": (0.96, 0.96, 0, 0),
-        "05": (0.88, 0.98, 0, 0), "06": (0.90, 0.94, 0, -0.025),
-        "07": (0.88, 0.98, 0, 0), "08": (0.90, 0.94, 0, -0.025),
-        "09": (0.98, 0.88, 0, 0), "10": (0.94, 0.97, 0, 0),
-    }
-    start, end, dx, dy = styles.get(index, (0.90, 0.98, 0, 0))
-    progress = f"min(t/{max(duration, 0.04)},1)"
-    ease = f"(0.5-0.5*cos(PI*{progress}))"
-    factor = f"({start}+({end-start})*{ease})"
-    short = min(width, height)
-    grade = "eq=brightness=-0.035:saturation=0.88," if index in ("02", "04") else ("eq=saturation=1.08:brightness=0.015," if index in ("08", "09", "10") else "")
+    # Keep the complete keyframe centered, as in the earlier fit/blur draft.
     vf = (
         f"[0:v]split[bg][fg];"
         f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,"
         f"crop={width}:{height},gblur=sigma=24,eq=brightness=-0.12[back];"
-        f"[fg]scale={short}:{short}:force_original_aspect_ratio=decrease,"
-        f"scale=w='trunc(iw*{factor}/2)*2':h='trunc(ih*{factor}/2)*2':eval=frame,"
-        f"{grade}setsar=1[front];"
-        f"[back][front]overlay=x='(W-w)/2+{dx}*W*(2*{ease}-1)':"
-        f"y='(H-h)/2+{dy}*H*(2*{ease}-1)':eval=frame,"
-        f"setsar=1,format=yuv420p"
+        f"[fg]scale={width}:{height}:force_original_aspect_ratio=decrease,setsar=1[front];"
+        f"[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1,format=yuv420p"
     )
-    if index == "10":
-        vf += f",fade=t=out:st={max(0,duration-0.8)}:d=0.8"
     _run([
         "ffmpeg", "-y", "-loop", "1", "-framerate", str(fps), "-i", str(keyframe),
         "-filter_complex_threads", "1", "-filter_complex", vf, "-frames:v", str(frames),
@@ -97,12 +76,11 @@ def build_still_clip(keyframe, dest, duration, size, fps):
 
 
 def build_degree_clip(dest, duration, size, fps):
-    import math
     w,h = size
-    # Two rays separated by exactly one degree; reveal along their length.
-    x,y = int(w*.12), int(h*.5)
+    # Exaggerate the separation for a readable metaphor in either aspect ratio.
+    x,y = int(w*.12), int(h*.65)
     length = int(w*.76)
-    slope = math.tan(math.radians(1))
+    slope = (h * 0.38) / length
     vf = (f"geq=r='if(between(X,{x},{x}+{length}*min(T/{duration}*2,1))*lt(abs(Y-{y}),2),230,if(between(X,{x},{x}+{length}*min(T/{duration}*2,1))*lt(abs(Y-{y}+(X-{x})*{slope}),2),255,15))':"
           f"g='if(lt(abs(Y-{y}),2)*between(X,{x},{x}+{length}*min(T/{duration}*2,1)),230,if(lt(abs(Y-{y}+(X-{x})*{slope}),2)*between(X,{x},{x}+{length}*min(T/{duration}*2,1)),180,20))':"
           f"b='if(lt(abs(Y-{y}),2)*between(X,{x},{x}+{length}*min(T/{duration}*2,1)),230,30)',format=yuv420p")
