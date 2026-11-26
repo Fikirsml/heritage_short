@@ -53,3 +53,7 @@ Final jobs select five motion shots. Final profile 480x480, 33 frames, 12 steps,
 
 ## Full-length MusicGen production — 2026-11-26
 User-reported worker result: music-0292a71a10559697, facebook/musicgen-small, requested duration 89.33 s, seed 42, success, music.wav, cache miss, latency 153.971 s, reported GPU minutes 2.566 (worker wall time / 60), peak allocated GPU memory 1.598 GiB, reported API cost USD 0.00. Public checkpoint download 2.36 GB. Missing HF_TOKEN and deprecated torch_dtype warnings were nonfatal. Audio duration and creative quality have not been independently verified. Runtime allocation and total infrastructure cost were not measured.
+
+
+## Wan production partial success — 2026-11-26
+User-reported job video-8c1d0793623cfbe4: 2/5 clips generated (shot_01_graduation, shot_08_dawn_horizon); shots 02, 06, 09 failed with CUDA OOM requesting 128 MiB. T4 capacity 14.56 GiB, process usage 14.46–14.49 GiB, free 71.81–103.81 MiB, reserved unallocated 713.75–737.75 MiB. Worker reported success despite partial completion. Wall time 1118.845 s, reported GPU minutes 18.647, cost unknown. Allocator fragmentation may contribute but is not established as root cause. Preserve successful clips; prioritize final assembly with fallback for missing clips. Clip playback and actual frame counts not independently verified.
