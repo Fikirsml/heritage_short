@@ -173,3 +173,7 @@ User-reported schema ValidationError: generated shot ID contained whitespace. No
 
 ## GPU availability and fallback quality
 Kaggle GPU remained unavailable and the original Colab account exhausted its quota. The user reported signing into another Google account; authorized runtime availability has not been verified. Do not treat account switching as a quota workaround. All ten FFmpeg fallback shots rendered in both aspect ratios, but the user rated the initial rough cut 2.8/5 and reported the revised effects looked worse and still resembled a slideshow. Mitigation selected: hybrid motion with five prioritized Wan shots, four stills and one procedural graphic. Production verification pending.
+
+
+## Hybrid regression test follow-up
+User reported 34 passed, 4 failed in 12.57s after pulling 9285fe5. Two assembly assertions expected obsolete zoompan or the first subprocess call rather than the new duration probe followed by interpolation. Two Kokoro tests inherited the approved am_michael environment voice instead of isolating af_heart. Updated assertions and test environment; rerun pending. No production narration changes. Mocked tests do not verify actual FFmpeg filter execution.
