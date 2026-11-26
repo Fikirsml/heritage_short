@@ -39,3 +39,27 @@
 
 - `outputs/radio_cut/` — audio-first cut (voice + music + stills reference)
 - Final video — TBD tooling
+
+
+### User Test 1 — Radio Cut
+
+**Objective:** Evaluate whether the narration communicates the intended message, creates emotional engagement and encourages personal reflection.
+
+**Prototype:** Black-screen radio cut with AI-generated male narration and temporary background audio.
+
+**Participant 1 — Anonymized**
+
+- Central message: Identified Proverbs 16:3.
+- Emotional connection: Related to the experience of feeling left behind.
+- Personal reflection: Connected the story to personal uncertainties and expressed encouragement to trust God.
+- Clarity and distractions: No specific feedback recorded.
+
+**Design decisions:**
+- Retain the original narration and approved male voice.
+- Give greater visual emphasis to the experience of feeling left behind.
+- Use restrained music during moments of uncertainty.
+- Clearly present the closing scripture.
+
+**Creator observation:** The combined effect of narration, visuals, music and subtitles will be evaluated during subsequent film testing.
+
+**Status:** One of three required participants completed. Further feedback pending.

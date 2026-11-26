@@ -1,20 +1,20 @@
 {
   "title": "One Degree",
-  "target_duration_seconds": 75,
+  "target_duration_seconds": 89.33,
   "narration": {
     "script": "When I graduated from high school, I thought I had life figured out.\n\nAttend classes, maybe fall in love, graduate, get a job, and life goes on. Simple, right?\n\nWell, not quite.\n\nI entered college without a goal or a vision. Could've at least prayed.\n\nYear after year in civil engineering, I felt like I was drifting. In my fourth year, I made a decision I never imagined making.\n\nI dropped out.\n\nEngineering taught me that even a one-degree change in direction can lead to an entirely different destination.\n\nI needed to reconsider mine.\n\nThrough prayer and reflection, I rediscovered a passion that had always been there: computers.\n\nSo I started over, this time committing my plans to God.\n\nI felt behind, like I'd lost everything. But the story of Jesus reminds me that what appears to be defeat can end in victory.\n\nGod provided the resources to start again, friends who offered wise counsel, and encouragement along the way.\n\nWhen I finally graduated in computer science, I looked back and realized that every checkpoint was an answer to prayer.\n\nIf I could tell my younger self one thing, it would be Proverbs 16:3:\n\n“Commit thy works unto the LORD, and thy thoughts shall be established.”",
     "voice": "Kore"
   },
   "music": {
     "prompt": "Cinematic emotional instrumental acoustic guitar and warm piano melody, building gradually from gentle reflective ambient pads to an uplifting, hopeful orchestral climax with soft strings.",
-    "duration_seconds": 75,
+    "duration_seconds": 89.33,
     "model": "facebook/musicgen-small"
   },
   "shots": [
     {
       "id": "shot_01_graduation",
       "prompt": "Cinematic centered POV high-angle shot of hands holding a high school diploma. In the center frame, a golden pocket compass rests on the paper pointing straight ahead. The background shows a sunlit pathway framed symmetrically by lush green trees. Subject and key action strictly centered for vertical and horizontal cropping. Motion: Gentle slow camera push-in toward the compass in the center.",
-      "duration_seconds": 7.5,
+      "duration_seconds": 8.93,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -28,7 +28,7 @@
     {
       "id": "shot_02_foggy_hallway",
       "prompt": "Cinematic realism shot centered on a shadowy silhouette of a student standing indecisively in a wide, misty university courtyard. Soft out-of-focus students walk by on the outer edges. In the visual center, a blank notebook sits on a wooden desk with an aimlessly tilted pencil line drifting across the page. Motion: Slow tilt up from the notebook to the centered silhouette framed by diffused morning light.",
-      "duration_seconds": 7.0,
+      "duration_seconds": 8.34,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -42,7 +42,7 @@
     {
       "id": "shot_03_engineering_blueprints",
       "prompt": "Detailed top-down central composition shot of complex civil engineering blueprints on a dark table. A drafting brass compass and protractor rest in the exact center, highlighting a razor-thin one-degree divergence line splitting off from a straight axis. Silhouette of a hand hovers over the drawings. Motion: Slow linear zoom into the central apex where the one-degree line separates.",
-      "duration_seconds": 7.5,
+      "duration_seconds": 8.93,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -56,7 +56,7 @@
     {
       "id": "shot_04_dropping_out",
       "prompt": "Cinematic silhouette shot of a person standing centered in a rain-streaked glass doorway of an academic building. An abandoned engineering textbook rests in the visual center on a concrete bench. Subtle ray of warm golden ambient light pierces through cool blue storm clouds above the central subject. Motion: Static composition with rain sliding down the central glass pane as warm lighting softly brightens.",
-      "duration_seconds": 7.0,
+      "duration_seconds": 8.34,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -70,7 +70,7 @@
     {
       "id": "shot_05_one_degree_motif",
       "prompt": "Symbolic central scene depicting two illuminated laser light paths diverging on a dark reflective surface at precisely a one-degree angle from a single central point. In central focus, a faceless hand silhouette gently rotates a brass compass dial to align with the new light trajectory. Motion: Smooth camera pan forward following the newly aligned golden beam of light.",
-      "duration_seconds": 8.0,
+      "duration_seconds": 9.53,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -84,7 +84,7 @@
     {
       "id": "shot_06_rediscovering_computers",
       "prompt": "Warm cinematic indoor shot. Centered close-up POV of folded hands resting in prayer on a clean desk next to a retro computer monitor displaying flowing code. Warm golden sunlight streams through a central window lattice, casting a subtle cross-shaped light shadow across the wooden desk. Motion: Slow tilt upward from the folded hands to the lit central monitor screen.",
-      "duration_seconds": 7.5,
+      "duration_seconds": 8.93,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -98,7 +98,7 @@
     {
       "id": "shot_07_starting_over",
       "prompt": "Cinematic medium shot centered on a faceless silhouette sitting productively at a bright modern workspace, typing on a modern laptop screen. A small desk compass sits in the center of the frame, its needle pointing steady towards a clear light source. Ample empty sky and center room left for text subtitles. Motion: Gentle rack focus from the illuminated keyboard in foreground center to the glowing compass needle.",
-      "duration_seconds": 7.5,
+      "duration_seconds": 8.93,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -112,7 +112,7 @@
     {
       "id": "shot_08_dawn_horizon",
       "prompt": "Dramatic symbolic landscape with central silhouette of a person standing on a hilltop looking towards a distant horizon at sunrise. Dark storm clouds part directly over the center, revealing radiant shafts of morning sunlight breaking through in a brilliant golden crown effect. Motion: Slow upward camera crane move tracking the breaking light across the sky.",
-      "duration_seconds": 7.5,
+      "duration_seconds": 8.93,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -126,7 +126,7 @@
     {
       "id": "shot_09_cs_graduation",
       "prompt": "Cinematic central low-angle shot of a graduate silhouette in cap and gown holding a Computer Science diploma in the direct center. Blurred silhouettes of supportive friends surround the background frame cheering. Warm golden hour light fills the central subject. Motion: Slow circular tracking shot staying focused strictly on the graduate in the central frame.",
-      "duration_seconds": 7.5,
+      "duration_seconds": 8.93,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
@@ -140,7 +140,7 @@
     {
       "id": "shot_10_proverbs_scripture",
       "prompt": "Cinematic close-up of an open classic Bible lying flat on a wooden table in central composition, illuminated by a brilliant warm beam of celestial light. The text area is centered with space reserved around it for video text overlay and AI disclosure end card. Motion: Slow, smooth vertical tilt upward as the golden beam of light slowly intensifies.",
-      "duration_seconds": 8.0,
+      "duration_seconds": 9.54,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
         "width": 480,
