@@ -198,6 +198,9 @@ def apply_edit_timing(storyboard):
 def stage_assemble(storyboard, quality='draft'):
     from pipeline import assemble
 
+    if quality == "final":
+        from pipeline import captions
+        captions.generate()
     radio = assemble.build_radio_cut()
     print(f"[assemble] radio cut -> {radio}")
 
