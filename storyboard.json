@@ -41,7 +41,7 @@
     },
     {
       "id": "shot_03_engineering_blueprints",
-      "prompt": "Detailed top-down central composition shot of complex civil engineering blueprints on a dark table. A drafting brass compass and protractor rest in the exact center, highlighting a razor-thin one-degree divergence line splitting off from a straight axis. Silhouette of a hand hovers over the drawings. Motion: Slow linear zoom into the central apex where the one-degree line separates.",
+      "prompt": "Cinematic overhead insert shot of civil engineering\n    blueprints spread across a wooden drafting table.\n    Brass drafting compass, ruler, protractor and pencil.\n    Two subtly diverging geometric lines.\n    No people, no hands, no human limbs.\n    Carefully arranged instruments, realistic textures,\n    cool directional window light.",
       "duration_seconds": 8.93,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
@@ -83,7 +83,7 @@
     },
     {
       "id": "shot_06_rediscovering_computers",
-      "prompt": "Warm cinematic indoor shot. Centered close-up POV of folded hands resting in prayer on a clean desk next to a retro computer monitor displaying flowing code. Warm golden sunlight streams through a central window lattice, casting a subtle cross-shaped light shadow across the wooden desk. Motion: Slow tilt upward from the folded hands to the lit central monitor screen.",
+      "prompt": "Cinematic medium-wide over-the-shoulder shot of an\n    anonymous male college student seated at a computer.\n    Complete head, shoulders, torso and seated posture\n    visible from behind, face naturally concealed.\n    Charcoal clothing, warm sunlight entering the room.\n    Closed Bible beside the computer, subtle atmosphere\n    of reflection, rediscovery and renewed purpose.\n    Natural anatomy, realistic proportions.",
       "duration_seconds": 8.93,
       "video": {
         "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
