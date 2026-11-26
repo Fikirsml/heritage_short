@@ -12,6 +12,8 @@ from pipeline import kokoro_client, tts, utils
 def reset_pipeline(monkeypatch, tmp_path):
     """Isolate the module-level pipeline cache and redirects per test."""
     kokoro_client._pipeline = None
+    monkeypatch.setenv("KOKORO_VOICE", "af_heart")
+    monkeypatch.setenv("KOKORO_SPEED", "1.0")
     monkeypatch.setattr(
         kokoro_client.shutil, "which", lambda name: "/usr/bin/espeak-ng"
     )
