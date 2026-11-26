@@ -177,3 +177,5 @@ Kaggle GPU remained unavailable and the original Colab account exhausted its quo
 
 ## Hybrid regression test follow-up
 User reported 34 passed, 4 failed in 12.57s after pulling 9285fe5. Two assembly assertions expected obsolete zoompan or the first subprocess call rather than the new duration probe followed by interpolation. Two Kokoro tests inherited the approved am_michael environment voice instead of isolating af_heart. Updated assertions and test environment; rerun pending. No production narration changes. Mocked tests do not verify actual FFmpeg filter execution.
+
+Verification: user reported 38 passed in 3.16s at 745ce18; both production jobs packaged successfully. Offline regression resolved; actual GPU inference and FFmpeg production filters remain unverified.
