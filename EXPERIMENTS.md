@@ -45,3 +45,7 @@ User confirms Windsurf IDE with SWE free-agent and local `python -m pytest -q`: 
 
 ## Planned hybrid motion experiment
 Compare the previously reviewed all-FFmpeg rough cut (2.8/5 user rating; later revision reported worse) with a hybrid cut using five Wan shots, four intentional stills and one procedural graphic. At identical per-shot settings this reduces planned video inference calls from ten to five; GPU minutes, memory, quality and final audience feedback remain unmeasured. Record actual settings, successful clips, retries and latency after production.
+
+
+## Hybrid implementation
+Final jobs select five motion shots. Final profile 480x480, 33 frames, 12 steps, retry at 17 frames on CUDA OOM. Existing persistent cache retained. Assembly adds intentional stills, procedural one-degree rays, interpolated motion and sidechain ducking with loudnorm. Captions use approximate word-weighted timing, not speech alignment; review required. All new production changes remain untested on the user's Mac and GPU. No measured savings claimed.
