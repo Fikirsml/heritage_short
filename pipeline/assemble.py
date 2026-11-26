@@ -154,7 +154,19 @@ def assemble(storyboard, out_path=None, size=SIZE, fps=FPS, shots_dir=None):
         cmd += ["-filter_complex", filter_complex]
     if audio_map:
         cmd += ["-map", audio_map, "-c:a", "aac"]
-    cmd += ["-c:v", "copy", "-shortest", str(final)]
+    # Optional locally authored text overlays, including timed subtitles/end card.
+    subtitles = OUTPUT_DIR / "narration" / "subtitles.srt"
+    if subtitles.is_file():
+        # Fixed relative path avoids escaping arbitrary user directory names.
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp:
+            local_srt = Path(temp) / "captions.srt"
+            shutil.copyfile(subtitles, local_srt)
+            escaped = str(local_srt).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
+            cmd += ["-vf", f"subtitles='{escaped}'", "-c:v", "libx264", "-pix_fmt", "yuv420p"]
+            _run(cmd + [str(final)])
+        return final, fallbacks
+    cmd += ["-c:v", "copy", str(final)]
 
     _run(cmd)
     return final, fallbacks
