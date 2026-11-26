@@ -28,6 +28,7 @@ def generate_storyboard(duration_seconds=75, shot_count=10):
     prompt = (
         f"{instructions}\nTarget duration: {duration_seconds} seconds. "
         f"Exactly {shot_count} shots. Shot durations must sum to target.\n"
+        "Separate still prompt and motion_prompt. Keep faces hidden and clothing consistent. Avoid readable generated text.\n"
         f"Brief:\n{brief}\nApproved narration:\n{narration}\n"
         f"Return only JSON matching this schema:\n{json.dumps(schema)}"
     )
@@ -42,7 +43,7 @@ def generate_storyboard(duration_seconds=75, shot_count=10):
         storyboard = json.loads(response.text)
         storyboard["target_duration_seconds"] = duration_seconds
         storyboard.setdefault("narration", {})["script"] = narration
-        storyboard["narration"].setdefault("voice", "Kore")
+        storyboard["narration"].setdefault("voice", "af_heart")
         storyboard["music"].setdefault("model", "facebook/musicgen-small")
         storyboard["music"]["duration_seconds"] = duration_seconds
         for index, shot in enumerate(storyboard["shots"]):
@@ -50,7 +51,7 @@ def generate_storyboard(duration_seconds=75, shot_count=10):
             if isinstance(raw_id, str):
                 shot["id"] = re.sub(r"[^A-Za-z0-9_-]+", "_", raw_id).strip("_") or f"shot_{index+1:02d}"
             video = {"model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers", "width": 480,
-                     "height": 480, "frames": 49, "steps": 30, "guidance": 5.0,
+                     "height": 480, "frames": 17, "steps": 6, "guidance": 3.0,
                      **shot.get("video", {})}
             video.setdefault("seed", 1000 + index)
             shot["video"] = video
