@@ -1,6 +1,7 @@
 """Generate a validated storyboard from approved creative inputs."""
 import json
 import os
+import re
 import time
 
 from google import genai
@@ -45,7 +46,9 @@ def generate_storyboard(duration_seconds=75, shot_count=10):
         storyboard["music"].setdefault("model", "facebook/musicgen-small")
         storyboard["music"]["duration_seconds"] = duration_seconds
         for index, shot in enumerate(storyboard["shots"]):
-            shot.setdefault("id", f"shot_{index+1:02d}")
+            raw_id = shot.get("id", f"shot_{index+1:02d}")
+            if isinstance(raw_id, str):
+                shot["id"] = re.sub(r"[^A-Za-z0-9_-]+", "_", raw_id).strip("_") or f"shot_{index+1:02d}"
             video = {"model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers", "width": 480,
                      "height": 480, "frames": 49, "steps": 30, "guidance": 5.0,
                      **shot.get("video", {})}
