@@ -2,7 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "HeritageShortStoryboard",
   "type": "object",
-  "required": ["title", "narration", "music", "shots"],
+  "required": [
+    "title",
+    "narration",
+    "music",
+    "shots"
+  ],
   "additionalProperties": false,
   "properties": {
     "title": {
@@ -17,7 +22,9 @@
     },
     "narration": {
       "type": "object",
-      "required": ["script"],
+      "required": [
+        "script"
+      ],
       "additionalProperties": false,
       "properties": {
         "script": {
@@ -27,8 +34,8 @@
         },
         "voice": {
           "type": "string",
-          "default": "Kore",
-          "description": "Gemini prebuilt TTS voice name."
+          "default": "af_heart",
+          "description": "Provider-specific voice identifier; Kokoro defaults to af_heart."
         },
         "model": {
           "type": "string",
@@ -38,7 +45,10 @@
     },
     "music": {
       "type": "object",
-      "required": ["prompt", "duration_seconds"],
+      "required": [
+        "prompt",
+        "duration_seconds"
+      ],
       "additionalProperties": false,
       "properties": {
         "prompt": {
@@ -65,7 +75,11 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "prompt", "duration_seconds"],
+        "required": [
+          "id",
+          "prompt",
+          "duration_seconds"
+        ],
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -90,14 +104,37 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "model": {"type": "string"},
-              "width": {"type": "integer", "exclusiveMinimum": 0},
-              "height": {"type": "integer", "exclusiveMinimum": 0},
-              "frames": {"type": "integer", "exclusiveMinimum": 0},
-              "steps": {"type": "integer", "exclusiveMinimum": 0},
-              "guidance": {"type": "number", "exclusiveMinimum": 0},
-              "seed": {"type": "integer"}
+              "model": {
+                "type": "string"
+              },
+              "width": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "height": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "frames": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "steps": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "guidance": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "seed": {
+                "type": "integer"
+              }
             }
+          },
+          "motion_prompt": {
+            "type": "string",
+            "description": "Camera and subject movement, separate from still image prompt."
           }
         }
       }
