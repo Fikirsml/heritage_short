@@ -132,13 +132,14 @@ PlayResY: {h}
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Title,Arial,{int(short*.075)},&H00D8E9FF,&H00FFFFFF,&H00201810,&H80000000,-1,0,0,0,100,100,2,0,1,1,0,5,20,20,20,1
+Style: Closing,Arial,{int(short*.052)},&H00D8E9FF,&H00FFFFFF,&H00201810,&H80000000,-1,0,0,0,100,100,1,0,1,1,0,5,20,20,20,1
 Style: Sub,Arial,{int(short*.032)},&H00FFFFFF,&H00FFFFFF,&H00201810,&H80000000,0,0,0,0,100,100,0,0,1,1,0,5,20,20,20,1
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     def line(start, end, style, y, text):
         return f"Dialogue: 0,{ts(start)},{ts(end)},{style},,0,0,0,,{{\\\\pos({w//2},{int(h*y)})\\\\fad(250,250)}}{text}\n".replace("\\\\", "\\")
-    return header + line(0, 2.5, "Title", .36, "ONE DEGREE") + line(0, 2.5, "Sub", .45, "A story of faith, purpose and redirection") + line(max(0,duration-2), duration, "Title", .42, "AI-GENERATED CONTENT")
+    return header + line(0, 2.5, "Title", .36, "ONE DEGREE") + line(0, 2.5, "Sub", .45, "A story of faith, purpose and redirection") + line(max(0,duration-2), duration, "Closing", .42, "AI-GENERATED CONTENT")
 
 
 def assemble(storyboard, out_path=None, size=SIZE, fps=FPS, shots_dir=None):
