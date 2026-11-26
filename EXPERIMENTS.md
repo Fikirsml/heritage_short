@@ -49,3 +49,7 @@ Compare the previously reviewed all-FFmpeg rough cut (2.8/5 user rating; later r
 
 ## Hybrid implementation
 Final jobs select five motion shots. Final profile 480x480, 33 frames, 12 steps, retry at 17 frames on CUDA OOM. Existing persistent cache retained. Assembly adds intentional stills, procedural one-degree rays, interpolated motion and sidechain ducking with loudnorm. Captions use approximate word-weighted timing, not speech alignment; review required. All new production changes remain untested on the user's Mac and GPU. No measured savings claimed.
+
+
+## Full-length MusicGen production — 2026-11-26
+User-reported worker result: music-0292a71a10559697, facebook/musicgen-small, requested duration 89.33 s, seed 42, success, music.wav, cache miss, latency 153.971 s, reported GPU minutes 2.566 (worker wall time / 60), peak allocated GPU memory 1.598 GiB, reported API cost USD 0.00. Public checkpoint download 2.36 GB. Missing HF_TOKEN and deprecated torch_dtype warnings were nonfatal. Audio duration and creative quality have not been independently verified. Runtime allocation and total infrastructure cost were not measured.
