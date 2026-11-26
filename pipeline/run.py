@@ -98,6 +98,11 @@ def quality_profile(quality):
 def video_job(storyboard, quality):
     profile = quality_profile(quality)
     shots = copy.deepcopy(storyboard['shots'])
+    if quality == 'final':
+        selected = {'01', '02', '06', '08', '09'}
+        shots = [shot for shot in shots if shot['id'].split('_')[1:2] and shot['id'].split('_')[1] in selected]
+        if len(shots) != 5:
+            raise ValueError('Final hybrid policy requires five selected shots')
     for shot in shots:
         shot.setdefault('video', {}).update({k: profile[k] for k in ('width', 'height', 'steps', 'frames', 'guidance')})
         motion = shot.get("motion_prompt") or (re.split(r"\bMotion:\s*", shot["prompt"], maxsplit=1, flags=re.I)[1] if re.search(r"\bMotion:\s*", shot["prompt"], flags=re.I) else "")
