@@ -27,7 +27,7 @@ def test_concat_file(tmp_path):
     ]
 
 
-def test_fallback_clip_invokes_layered_motion(monkeypatch, tmp_path):
+def test_fallback_clip_preserves_centered_image(monkeypatch, tmp_path):
     calls = []
     _fake_ffmpeg(monkeypatch, calls)
     keyframe = tmp_path / "k.png"
@@ -36,7 +36,8 @@ def test_fallback_clip_invokes_layered_motion(monkeypatch, tmp_path):
     assemble.build_fallback_clip(keyframe, tmp_path / "c.mp4", 5)
 
     cmd = " ".join(calls[0])
-    assert "overlay" in cmd and "gblur" in cmd
+    assert "overlay=(W-w)/2:(H-h)/2" in cmd and "gblur" in cmd
+    assert "zoompan" not in cmd and "eval=frame" not in cmd
     assert calls[0][calls[0].index("-frames:v") + 1] == "120"
 
 
@@ -85,3 +86,23 @@ def test_require_ffmpeg_bundled(monkeypatch):
     monkeypatch.setattr(assemble.shutil, "which", lambda name: None)
     monkeypatch.setattr(imageio_ffmpeg, "get_ffmpeg_exe", lambda: "/bundled/ffmpeg")
     assert assemble._require_ffmpeg() == "/bundled/ffmpeg"
+
+
+@pytest.mark.parametrize("size", [(1280, 720), (720, 1280)])
+def test_editorial_titles(size):
+    ass = assemble.title_ass(size, 89.33)
+    assert "ONE DEGREE" in ass
+    assert "AI-GENERATED CONTENT" in ass
+    assert "0:01:27.33,0:01:29.33,Closing" in ass
+    assert f"PlayResX: {size[0]}" in ass
+    assert r"\fad(250,250)" in ass
+
+
+def test_editorial_keyframe_precedence(monkeypatch, tmp_path):
+    monkeypatch.setattr(assemble, "OUTPUT_DIR", tmp_path)
+    original = tmp_path / "keyframes" / "shot_03.png"
+    revised = tmp_path / "keyframes_polished" / "shot_03.png"
+    assert assemble.editorial_keyframe("shot_03") == original
+    revised.parent.mkdir()
+    revised.write_bytes(b"image")
+    assert assemble.editorial_keyframe("shot_03") == revised
