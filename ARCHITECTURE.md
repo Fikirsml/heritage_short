@@ -95,3 +95,7 @@ Both required exports reuse the same cached footage, with exact 16:9 and 9:16 di
 ## MusicGen migration (2026-11-26)
 
 Default music worker: `facebook/musicgen-small`, FP16 on Colab T4. See [FAILURES.md](FAILURES.md) F011–F016 for measured results and provider decision. The new notebook pins Transformers 4.57.6 and SciPy 1.16.3; run smoke first, then explicitly select the packaged job ID. Worker generates up to 25-second segments, blends with one-second crossfades, trims to target length and caches by generation settings. Model weights are CC BY-NC 4.0; assignment substitution acceptance and full-length integration are pending. Measured standalone generation: 9.863 s for 5.06 s audio, 1.215 GiB peak allocated GPU memory, $0 API cost; not a full-track benchmark.
+
+
+## Planned selective motion policy
+Separate creative shot treatment from provider failure: selected Wan shots enter the GPU job; intentional stills and procedural graphics are rendered locally. Preserve all ten storyboard entries for assembly. Planned selection: 01, 02, 06, 08, 09 for Wan; 03, 04, 07, 10 still; 05 graphic. Distinguish intentional stills from missing generated clips in logs. Implementation and production verification pending.
