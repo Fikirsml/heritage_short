@@ -10,8 +10,8 @@
   "final": {
     "width": 480,
     "height": 480,
-    "steps": 20,
-    "frames": 17,
+    "steps": 12,
+    "frames": 33,
     "export_height": 720,
     "guidance": 3
   },
