@@ -162,6 +162,34 @@ def export_sizes(quality):
     return {"horizontal": (long, short), "vertical": (short, long)}
 
 
+def apply_edit_timing(storyboard):
+    """Apply optional local shot-start anchors without modifying the storyboard."""
+    path = utils.INPUT_DIR / "timing.json"
+    if not path.is_file():
+        return storyboard
+    result = copy.deepcopy(storyboard)
+    shots = result["shots"]
+    anchors = utils.load_json(path)
+    ids = [s["id"] for s in shots]
+    if set(anchors) - set(ids):
+        raise ValueError("Unknown shot in timing.json")
+    total = sum(float(s["duration_seconds"]) for s in shots)
+    points = {0: 0.0, len(shots): total}
+    for key, value in anchors.items():
+        points[ids.index(key)] = float(value)
+    ordered = sorted(points.items())
+    if ordered[0][1] != 0 or any(not (0 <= a < b <= total) for (_, a), (_, b) in zip(ordered, ordered[1:])):
+        raise ValueError("Shot timing anchors must increase within film duration")
+    for (i, start), (j, end) in zip(ordered, ordered[1:]):
+        weight = sum(float(s["duration_seconds"]) for s in shots[i:j])
+        elapsed = 0.0
+        for k in range(i, j):
+            duration = round((end-start)*float(shots[k]["duration_seconds"])/weight, 2) if k < j-1 else round(end-start-elapsed, 2)
+            shots[k]["duration_seconds"] = duration
+            elapsed += duration
+    return result
+
+
 def stage_assemble(storyboard, quality='draft'):
     from pipeline import assemble
 
@@ -170,6 +198,7 @@ def stage_assemble(storyboard, quality='draft'):
 
     keyframes = [OUTPUT_DIR / "keyframes" / f"{s['id']}.png" for s in storyboard["shots"]]
     job_dir = exchange.package_job("video", video_job(storyboard, quality), [p for p in keyframes if p.is_file()])
+    storyboard = apply_edit_timing(storyboard)
     dest = OUTPUT_DIR / "final" / quality
     dest.mkdir(parents=True, exist_ok=True)
     for label, size in export_sizes(quality).items():
