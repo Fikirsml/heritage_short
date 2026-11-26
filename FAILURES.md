@@ -169,3 +169,7 @@ User reports successful standalone image-to-video generation using WanImageToVid
 ### F022 — Gemini shot ID formatting
 
 User-reported schema ValidationError: generated shot ID contained whitespace. Normalize string IDs to filename-safe characters before validation; retain schema and duplicate-ID checks. Failed response was not saved by the existing pipeline; regeneration required. Fix committed, live verification pending.
+
+
+## GPU availability and fallback quality
+Kaggle GPU remained unavailable and the original Colab account exhausted its quota. The user reported signing into another Google account; authorized runtime availability has not been verified. Do not treat account switching as a quota workaround. All ten FFmpeg fallback shots rendered in both aspect ratios, but the user rated the initial rough cut 2.8/5 and reported the revised effects looked worse and still resembled a slideshow. Mitigation selected: hybrid motion with five prioritized Wan shots, four stills and one procedural graphic. Production verification pending.
