@@ -41,3 +41,7 @@ User reports successful standalone image-to-video generation using WanImageToVid
 ### Technical foundation verification (2026-11-26)
 
 User confirms Windsurf IDE with SWE free-agent and local `python -m pytest -q`: 38 passed in 12.64s following Wan integration commit 00eb130. Offline regression suite passed; integrated GPU production and video cache verification remain pending. Coding agent setup is user-reported.
+
+
+## Planned hybrid motion experiment
+Compare the previously reviewed all-FFmpeg rough cut (2.8/5 user rating; later revision reported worse) with a hybrid cut using five Wan shots, four intentional stills and one procedural graphic. At identical per-shot settings this reduces planned video inference calls from ten to five; GPU minutes, memory, quality and final audience feedback remain unmeasured. Record actual settings, successful clips, retries and latency after production.
