@@ -63,3 +63,6 @@
 **Creator observation:** The combined effect of narration, visuals, music and subtitles will be evaluated during subsequent film testing.
 
 **Status:** One of three required participants completed. Further feedback pending.
+
+## Hybrid motion production decision
+Following user review of the rough cuts (mean 2.8/5 initially; revised effects reported worse), use intentional still inserts and selective AI motion instead of uniform pan/zoom. Proposed allocation by shot number: Wan 01, 02, 06, 08, 09; still 03, 04, 07, 10; procedural one-degree graphic 05. Prioritize narrative turning points and preserve important props. This is a planned treatment, not a completed render. Validate timing, composition and audience response in the near-final cut.
