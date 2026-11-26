@@ -51,15 +51,19 @@ def build_fallback_clip(keyframe, out_path, duration, size=SIZE, fps=FPS):
     _require_ffmpeg()
     width, height = size
     frames = max(1, round(duration * fps))
+    # Keep the foreground's original aspect ratio; animate the backdrop only
+    # in a later pass if needed. A static fit is safer than cropping story props.
     vf = (
-        f"scale={width * 4}:{height * 4}:force_original_aspect_ratio=increase,crop={width * 4}:{height * 4},"
-        "zoompan=z='min(1.0+0.0008*on,1.2)':"
-        "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
-        f"d={frames}:s={width}x{height}:fps={fps},setsar=1,format=yuv420p"
+        f"[0:v]split[bg][fg];"
+        f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,"
+        f"crop={width}:{height},gblur=sigma=24,eq=brightness=-0.12[back];"
+        f"[fg]scale={width}:{height}:force_original_aspect_ratio=decrease:"
+        f"force_divisible_by=2[front];"
+        f"[back][front]overlay=(W-w)/2:(H-h)/2,setsar=1,format=yuv420p"
     )
     _run([
-        "ffmpeg", "-y", "-loop", "1", "-i", str(keyframe),
-        "-vf", vf, "-t", str(duration),
+        "ffmpeg", "-y", "-loop", "1", "-framerate", str(fps), "-i", str(keyframe),
+        "-filter_complex", vf, "-frames:v", str(frames),
         "-c:v", "libx264", "-pix_fmt", "yuv420p",
         str(out_path),
     ])
@@ -113,7 +117,7 @@ def assemble(storyboard, out_path=None, size=SIZE, fps=FPS, shots_dir=None):
             fallbacks.append(shot_id)
             log_run(
                 stage="assemble",
-                model="ffmpeg-zoompan",
+                model="ffmpeg-fit-blur",
                 parameters={"reason": "missing video clip", "duration": duration},
                 latency=0,
                 status="fallback",
